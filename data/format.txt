@@ -1,0 +1,8 @@
+[task text] [date added] [date due] [reschedule period in days] [flag] [tags]\r\n
+
+[task text]  				- ASCII string between speech marks
+[date added] 				- dd/mm/yyyy
+[date due] 	 				- dd/mm/yyyy or - if none 
+[reschedule period] - integer or - if none
+[flag] 							- ! or ? or @ or - if none
+[tags] 							- ASCII strings without spaces nor speech marks, up to 5

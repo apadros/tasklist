@@ -28,10 +28,10 @@ void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, 
 	if(groups[0] == Null) // If no groups supplied
 		printf("-\n");
 	else { 
-		printf("%s\n", groups[0]);
+		printf("%s\n", (char*)groups[0]);
 		FromTo(1, MaxTags) {
 			if(groups[it] != Null)
-				printf("            %s\n", groups[it]);
+				printf("            %s\n", (char*)groups[it]);
 		}
 	}
 }

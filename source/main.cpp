@@ -8,7 +8,6 @@
 #include "apad_error.h"
 #include "apad_file.h"
 #include "apad_intrinsics.h"
-#include "apad_log.h"
 #include "apad_maths.h"
 #include "apad_string.h"
 #include "apad_time.h"
@@ -34,11 +33,6 @@ struct taskListEntry {
 };
 
 ConsoleAppEntryPoint(args, argsCount) {
-	auto logFile = OpenLogFile();
-	file tasksFile = {};
-	
-	Log(logFile, "\n"); // Insert blank line for clarity
-	
 	#ifdef APAD_DEBUG
 		#if 1
 		args[1] = "add";
@@ -51,7 +45,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#endif
 	
 	if(argsCount < 2) {
-		Log(logFile, "ERROR - No commands supplied.\n");
+		printf("ERROR - No commands supplied.\n");
 		goto usage_msg;
 	}
 	
@@ -100,7 +94,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				if(targetDate.length == 0)
 					targetDate = DateToString(GetDate(0));
 				else {
-					printf("ERROR: Target date already supplied: %s\n\n", arg);
+					printf("ERROR: Target date already supplied: %s\n\n", (char*)arg);
 					goto usage_msg;
 				}
 			}
@@ -128,7 +122,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					}
 				}
 				if(isValid == false) {
-					Log(logFile, "ERROR - Invalid day offset (max length allowed is 3)\n");
+					printf("ERROR - Invalid day offset (max length allowed is 3)\n");
 					goto program_exit;
 				}
 				
@@ -152,7 +146,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				else if(reschedulePeriod.length == 0)
 					reschedulePeriod = arg.chars + 1;
 				else {
-					printf("ERROR: Reschedule period already supplied\n\n", arg);
+					printf("ERROR: Reschedule period already supplied\n\n", (char*)arg);
 					goto usage_msg;
 				}						
 			}
@@ -169,7 +163,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(arg[0] == '!' || arg[0] == '?' || arg[0] == '@')
 				flag = arg;
 			else {
-				printf("ERROR: Invalid flag supplied: %s\n\n", arg);
+				printf("ERROR: Invalid flag supplied: %s\n\n", (char*)arg);
 				goto usage_msg;
 			}
 		}
@@ -204,18 +198,19 @@ ConsoleAppEntryPoint(args, argsCount) {
 			while(it < argsCount);
 		}
 		else { // Invalid argument
-			printf("ERROR: Invalid argument: %s\n\n", arg);
+			printf("ERROR: Invalid argument: %s\n\n", (char*)arg);
 			goto usage_msg;
 		}
 	}		
 	
 	// Check minimum required arguments have been supplied
 	if(taskString.length == 0) {
-		Log(logFile, "ERROR - No task string specified.\n");
+		printf("ERROR - No task string specified.\n");
 		goto usage_msg;
 	}
 	
-	// Open the todos file and generate task list
+	// Open the tasks file and generate task list
+	file tasksFile = {};
 	{
 		#ifdef APAD_DEBUG
 		string dataPath = "..\\..\\data\\tasklist.txt";
@@ -223,14 +218,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 		string dataPath = "data/tasklist.txt";
 		#endif 
 				
-		if(FileExists(dataPath) == false) {
-			Log(logFile, "ERROR - Couldn't find data/tasklist.txt\n");
+		if(Win32FileExists(dataPath) == false) { // @TODO - Replace with File API function once bug is fixed
+			printf("ERROR - Couldn't find data/tasklist.txt\n");
 			goto program_exit;
 		}
 		
-		tasksFile = LoadFile(dataPath);
+		tasksFile = Win32LoadFile(dataPath); // @TODO - Replace with File API function once bug is fixed
 		if(ErrorIsSet() == true) {
-			Log(logFile, "ERROR - Couldn't load data/tasklist.txt");
+			printf("ERROR - Couldn't load data/tasklist.txt");
 			goto program_exit;
 		}
 		
@@ -271,7 +266,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 				auto*  task = (taskListEntry*)Push(sizeof(taskListEntry), taskList);
 				ClearMemory(task, sizeof(taskListEntry));
 				task->task = lineArray[0];
-				task->dateAdded = lineArray[1];
+				task->dateAdded = lineArray[1]; // @TODO - We're getting an access violation here for some reason.
+				PreventCompilation;
 				task->dateDue = lineArray[2];
 				
 				string resc = lineArray[3];
@@ -311,7 +307,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		
 		// @TODO - Read the file, create internal task list, append new task, save to file
 		
-		Log(logFile, "Task added\n");
+		printf("Task added\n");
 		
 		PrintDetailedTask(Null, taskString, dateAdded, targetDate, reschedulePeriod, flag, tags);
 		
@@ -372,7 +368,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				ForAll(MaxTags)
 					tags[it] = Null;
 					
-				Log(logFile, "\n");
+				printf("\n");
 			}
 			else if(toStore == Null && IsValidChar(c) == true) {
 				if(c == '\"') { // Beginning of the task string
@@ -431,23 +427,22 @@ ConsoleAppEntryPoint(args, argsCount) {
 	else if(command == ValidCommands[ValidCommandsIndex::Redo]) { // @TODO
 	}
 	else {
-		Log(logFile, "ERROR - Invalid command supplied.\n");
+		printf("ERROR - Invalid command supplied.\n");
 		goto usage_msg;
 	}
 	
 	goto program_exit;
 	
   usage_msg:
-	Log(logFile, "Usage: calendar [add] [list] [delete | del] [modify | mod] [reschedule | res] [undo] [redo]\n");
+	printf("Usage: todos [add] [list] [del | delete] [resc | reschedule] [mod | modify] [undo] [redo]\n");
 	// @TODO - Add specific messages for individual commands? E.g. how does the user know the right format for the dates?
 	// @TODO - A git-like set of help messages for individual commands?
 			
 	program_exit:
 	if(IsValid(tasksFile) == true)
-		FreeFile(tasksFile);
+		FreeMemory(tasksFile); // @TODO - Replace with File API function once bug is fixed
 	
-	printf("%s\n", (const char*)logFile.memory);
-	CloseLogFile(logFile);
-
+	printf("\n");
+	
 	return 0;
 }

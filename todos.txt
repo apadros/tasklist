@@ -1,5 +1,7 @@
 - Testbench / testbenches
 
+@CURRENT - Review main.cpp to cache the project back in
+
 Dates
 	- -da : date added, -dd : date due switches
 	- <=[date] less than or equal to [date]
@@ -12,7 +14,7 @@ Dates
 Reschedule
 	- resc command
 	
-Groups / Tags
+Tags
 	- Command to list all established groups / tags
 		
 Task file

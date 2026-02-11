@@ -1,0 +1,5 @@
+todos [add] [list] [del | delete] [resc | reschedule] [mod | modify] [undo] [redo]
+
+arguments:
+-s 	task string
+
