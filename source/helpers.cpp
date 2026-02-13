@@ -1,3 +1,9 @@
+#include <stdio.h>
+void PrintErrorExit(const char* string) {
+	printf("ERROR: %s\n", string); 
+	goto program_exit;
+}
+
 bool IsValidChar(char c) {
   return IsLetter(c) == true || IsNumber(c) == true || c == '\"' || c == '/' || c == '-' || c == '?' || c == '!' || c == '#';
 }

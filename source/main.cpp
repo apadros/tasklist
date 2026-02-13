@@ -20,14 +20,17 @@ const ui8 	 MaxTags = 5;
 
 #include "helpers.cpp"
 
-string 		ValidCommands[] = 	{ "add", "list", "del", "resc", "mod", "undo", "redo" };
-BeginEnum(ValidCommandsIndex) { Add, List, Delete, Reschedule, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
+string 		ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
+BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
+
+string    ValidOptions[] =   { "-s", "-da", "-dd", "-t" };
+BeginEnum(ValidOptionsIndex) { TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidOptionsIndex);
+
 
 struct taskListEntry {
 	string task;
 	string dateAdded;
 	string dateDue;
-	ui8    reschedulePeriod;
 	char   flag;
 	string tags[MaxTags];
 };
@@ -45,27 +48,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#endif
 	
 	if(argsCount == 1) {
-		printf("Usage: %s [add] [list] [del | delete] [resc | reschedule] [mod | modify] [undo] [redo]\n\n", args[0]);
+		printf("Usage: %s [add] [list] [del | delete] [mod | modify] [undo] [redo]\n\n", args[0]);
 		printf("Options\n");
-		printf("	-s  [<text string>]       task text\n");
-		printf("	-da [dd/mm | dd/mm/yyyy]  date added\n");
-		printf("	-dd [dd/mm | dd/mm/yyyy]  date due\n");
-		printf("	-r  [<days>]              reschedule period\n");
-		printf("	-t  [<tags>...]           string tags (up to 5)\n");
+		printf("	%s  [<text string>]                 task text\n", (const char*)ValidOptions[ValidOptionsIndex::TaskString]);
+		printf("	%s [dd/mm | dd/mm/yyyy]            date added\n", (const char*)ValidOptions[ValidOptionsIndex::DateAdded]);
+		printf("	%s [dd/mm | dd/mm/yyyy | +ddd[w]]  date due\n", (const char*)ValidOptions[ValidOptionsIndex::DateDue]);
+		printf("	%s  [<tags>...]                     string tags (up to 5)\n", (const char*)ValidOptions[ValidOptionsIndex::Tags]);
 		// @TODO - Add what options can be specified with every command, figure out a simple way
-		goto program_exit;
-	}
-
-	if(argsCount < 2) {
-		printf("ERROR - No commands supplied.\n");
 		goto program_exit;
 	}
 	
 	// Data to be parsed from arguments
 	string command;
 	string taskString;
+	string dateAdded;
 	string targetDate;
-	string reschedulePeriod;
 	string flag;
 	string tags[MaxTags];
 
@@ -80,33 +77,58 @@ ConsoleAppEntryPoint(args, argsCount) {
 			}
 		}
 		
-		if(found == false) {
-			printf("ERROR: Invalid command\n\n");
-			goto program_exit;
-		}
+		if(found == false)
+			PrintErrorExit("Invalid command\n");
 	}
 	
-	// Parse remaining arguments
+	#define CheckArgsExit() if(it >= argsCount) \
+														PrintErrorExit("Not enough arguments supplied.");
+			
+	
+	// Parse options
 	FromTo(2, argsCount) {
 		string arg = args[it];
 		
-		if(arg == "-s") { // Task string
-			if(it + 1 < argsCount) {
+		if(arg == ValidOptions[ValidOptionsIndex::TaskString]) {
+			it += 1;
+			CheckArgsExit();
+			taskString = args[it];
+		}
+		else if(arg == ValidOptions[ValidOptionsIndex::DateAdded]) {
+			it += 1;
+			CheckArgsExit();
+			dateAdded = args[it]; // @TODO - Check format
+		}
+		else if(arg == ValidOptions[ValidOptionsIndex::DateDue]) {
+			it += 1;
+			CheckArgsExit();
+			dateDue = args[it]; // @TODO - Check format
+		}
+		else if(arg == ValidOptions[ValidOptionsIndex::Tags]) {
+			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
+			ui8 count = 0;
+			while(count < MaxTags) {
 				it += 1;
-				taskString = args[it];
-				continue;
-			}
-			else {
-				printf("ERROR: Not enough arguments supplied\n\n");
-				goto program_exit;
+				CheckArgsExit();
+				
+				string s = args[it];
+				bool option = FindSubstring("-", s);
+				if(option == false)
+					tags[count++] = arg;
+				else {
+					it -= 1;
+					break;
+				}
 			}
 		}
+		
+		#if 0
 		else if(IsDate(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
       if(arg[0] == '.') {
 				if(targetDate.length == 0)
 					targetDate = DateToString(GetDate(0));
 				else {
-					printf("ERROR: Target date already supplied: %s\n\n", (char*)arg);
+					PrintErrorExit("Target date already supplied: %s\n", (char*)arg);
 					goto program_exit;
 				}
 			}
@@ -134,7 +156,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					}
 				}
 				if(isValid == false) {
-					printf("ERROR - Invalid day offset (max length allowed is 3)\n");
+					PrintErrorExit("Invalid day offset (max length allowed is 3)\n");
 					goto program_exit;
 				}
 				
@@ -158,7 +180,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				else if(reschedulePeriod.length == 0)
 					reschedulePeriod = arg.chars + 1;
 				else {
-					printf("ERROR: Reschedule period already supplied\n\n", (char*)arg);
+					PrintErrorExit("Reschedule period already supplied\n", (char*)arg);
 					goto program_exit;
 				}						
 			}
@@ -166,7 +188,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				if(targetDate.length == 0)
 					targetDate = DateToString(StringToDate(arg)); // Conversion back and forth to set the standard date format dd/mm/yyyy
 				else {
-					printf("ERROR: Target date already supplied\n\n", arg);
+					PrintErrorExit("Target date already supplied\n", arg);
 					goto program_exit;
 				}
 			}
@@ -175,7 +197,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(arg[0] == '!' || arg[0] == '?' || arg[0] == '@')
 				flag = arg;
 			else {
-				printf("ERROR: Invalid flag supplied: %s\n\n", (char*)arg);
+				PrintErrorExit("Invalid flag supplied: %s\n", (char*)arg);
 				goto program_exit;
 			}
 		}
@@ -183,7 +205,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			it += 1;
 			
 			if(it == argsCount) {
-				printf("ERROR: No tags specified\n\n");
+				PrintErrorExit("No tags specified\n");
 				goto program_exit;
 			}
 			
@@ -201,7 +223,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				}
 				
 				if(added == false) {
-					printf("ERROR: Number of tags exceeded, max 5\n\n");
+					PrintErrorExit("Number of tags exceeded, max 5\n");
 					goto program_exit;
 				}
 				
@@ -210,14 +232,17 @@ ConsoleAppEntryPoint(args, argsCount) {
 			while(it < argsCount);
 		}
 		else { // Invalid argument
-			printf("ERROR: Invalid argument: %s\n\n", (char*)arg);
+			PrintErrorExit("Invalid argument: %s\n", (char*)arg);
 			goto program_exit;
 		}
-	}		
+		#endif
+	}	
+	
+	#if 0
 	
 	// Check minimum required arguments have been supplied
 	if(taskString.length == 0) {
-		printf("ERROR - No task string specified.\n");
+		PrintErrorExit("No task string specified.\n");
 		goto program_exit;
 	}
 	
@@ -231,19 +256,18 @@ ConsoleAppEntryPoint(args, argsCount) {
 		#endif 
 				
 		if(Win32FileExists(dataPath) == false) { // @TODO - Replace with File API function once bug is fixed
-			printf("ERROR - Couldn't find data/tasklist.txt\n");
+			PrintErrorExit("Couldn't find data/tasklist.txt\n");
 			goto program_exit;
 		}
 		
 		tasksFile = Win32LoadFile(dataPath); // @TODO - Replace with File API function once bug is fixed
 		if(ErrorIsSet() == true) {
-			printf("ERROR - Couldn't load data/tasklist.txt");
+			PrintErrorExit("Couldn't load data/tasklist.txt");
 			goto program_exit;
 		}
 		
-		// Parse tasks
-		// Format: [task text("string")] [date added(dd/mm/yyyy)] [date due(dd/mm/yyyy | -)] [reschedule(days | -)] [flag(! | ? | @ | -)] [groups, up to 5 (g1, g2 ...)]\r\n
-				
+		// Parse tasks - see data/format.txt
+		
 		// Extract data
 		auto  taskList = AllocateStack(128);
 		auto  line = AllocateStack(128);
@@ -439,14 +463,19 @@ ConsoleAppEntryPoint(args, argsCount) {
 	else if(command == ValidCommands[ValidCommandsIndex::Redo]) { // @TODO
 	}
 	else {
-		printf("ERROR - Invalid command supplied.\n");
+		PrintErrorExit("Invalid command supplied.\n");
 		goto program_exit;
 	}
 	
+	#endif
+	
 	program_exit:
 	
+	// @TODO - Renable
+	#if 0
 	if(IsValid(tasksFile) == true)
 		FreeMemory(tasksFile); // @TODO - Replace with File API function once bug is fixed
+	#endif
 	
 	printf("\n");
 	

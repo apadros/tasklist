@@ -1,9 +1,5 @@
 Testbench / testbenches
 
-@CURRENT - Review main.cpp to cache the project back in
-
-Display usage message only when supplying no arguments
-
 Dates
 	- <=[date] less than or equal to [date]
 		- Same for <, >, >= etc
@@ -12,9 +8,6 @@ Dates
 		- Could do <=., >=., etc
 	- Checking whether it actually exists. E.g. 30th February
 		
-Reschedule
-	- resc command
-	
 Tags
 	- Command to list all established groups / tags
 	- How to add / remove tags from already-present tasks?
