@@ -34,7 +34,7 @@ struct taskListEntry {
 
 ConsoleAppEntryPoint(args, argsCount) {
 	#ifdef APAD_DEBUG
-		#if 1
+		#if 0
 		args[1] = "add";
 		args[2] = "-s";
 		args[3] = "new task";
@@ -44,9 +44,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 		#endif
 	#endif
 	
+	if(argsCount == 1) {
+		printf("Usage: %s [add] [list] [del | delete] [resc | reschedule] [mod | modify] [undo] [redo]\n\n", args[0]);
+		printf("Options\n");
+		printf("	-s  [<text string>]       task text\n");
+		printf("	-da [dd/mm | dd/mm/yyyy]  date added\n");
+		printf("	-dd [dd/mm | dd/mm/yyyy]  date due\n");
+		printf("	-r  [<days>]              reschedule period\n");
+		printf("	-t  [<tags>...]           string tags (up to 5)\n");
+		// @TODO - Add what options can be specified with every command, figure out a simple way
+		goto program_exit;
+	}
+
 	if(argsCount < 2) {
 		printf("ERROR - No commands supplied.\n");
-		goto usage_msg;
+		goto program_exit;
 	}
 	
 	// Data to be parsed from arguments
@@ -70,7 +82,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		
 		if(found == false) {
 			printf("ERROR: Invalid command\n\n");
-			goto usage_msg;
+			goto program_exit;
 		}
 	}
 	
@@ -86,7 +98,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			}
 			else {
 				printf("ERROR: Not enough arguments supplied\n\n");
-				goto usage_msg;
+				goto program_exit;
 			}
 		}
 		else if(IsDate(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
@@ -95,7 +107,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					targetDate = DateToString(GetDate(0));
 				else {
 					printf("ERROR: Target date already supplied: %s\n\n", (char*)arg);
-					goto usage_msg;
+					goto program_exit;
 				}
 			}
 			else if(arg[0] == '+') {
@@ -147,7 +159,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					reschedulePeriod = arg.chars + 1;
 				else {
 					printf("ERROR: Reschedule period already supplied\n\n", (char*)arg);
-					goto usage_msg;
+					goto program_exit;
 				}						
 			}
 			else {
@@ -155,7 +167,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					targetDate = DateToString(StringToDate(arg)); // Conversion back and forth to set the standard date format dd/mm/yyyy
 				else {
 					printf("ERROR: Target date already supplied\n\n", arg);
-					goto usage_msg;
+					goto program_exit;
 				}
 			}
 		}
@@ -164,7 +176,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				flag = arg;
 			else {
 				printf("ERROR: Invalid flag supplied: %s\n\n", (char*)arg);
-				goto usage_msg;
+				goto program_exit;
 			}
 		}
 		else if(arg == "-t") { // Tags
@@ -172,7 +184,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			
 			if(it == argsCount) {
 				printf("ERROR: No tags specified\n\n");
-				goto usage_msg;
+				goto program_exit;
 			}
 			
 			// Everything following this switch is considered to be a tag
@@ -199,14 +211,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		else { // Invalid argument
 			printf("ERROR: Invalid argument: %s\n\n", (char*)arg);
-			goto usage_msg;
+			goto program_exit;
 		}
 	}		
 	
 	// Check minimum required arguments have been supplied
 	if(taskString.length == 0) {
 		printf("ERROR - No task string specified.\n");
-		goto usage_msg;
+		goto program_exit;
 	}
 	
 	// Open the tasks file and generate task list
@@ -428,17 +440,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 	}
 	else {
 		printf("ERROR - Invalid command supplied.\n");
-		goto usage_msg;
+		goto program_exit;
 	}
 	
-	goto program_exit;
-	
-  usage_msg:
-	printf("Usage: todos [add] [list] [del | delete] [resc | reschedule] [mod | modify] [undo] [redo]\n");
-	// @TODO - Add specific messages for individual commands? E.g. how does the user know the right format for the dates?
-	// @TODO - A git-like set of help messages for individual commands?
-			
 	program_exit:
+	
 	if(IsValid(tasksFile) == true)
 		FreeMemory(tasksFile); // @TODO - Replace with File API function once bug is fixed
 	

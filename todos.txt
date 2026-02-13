@@ -1,9 +1,10 @@
-- Testbench / testbenches
+Testbench / testbenches
 
 @CURRENT - Review main.cpp to cache the project back in
 
+Display usage message only when supplying no arguments
+
 Dates
-	- -da : date added, -dd : date due switches
 	- <=[date] less than or equal to [date]
 		- Same for <, >, >= etc
 		- Requires logic when filtering for dates
@@ -16,9 +17,9 @@ Reschedule
 	
 Tags
 	- Command to list all established groups / tags
+	- How to add / remove tags from already-present tasks?
 		
 Task file
-	- Format: [task text("string")] [date added(dd/mm/yyyy)] [date due(dd/mm/yyyy | -)] [reschedule(days | -)] [flag(! | ? | @ | -)] [groups, up to 5 (g1, g2 ...)]\r\n
 	- Saving changes to it
 	- Daily local backup at the start of the day?
 		- Limit to 10 days
