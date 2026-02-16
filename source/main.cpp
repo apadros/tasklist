@@ -35,15 +35,18 @@ struct taskListEntry {
 	string tags[MaxTags];
 };
 
+#include <stdio.h>
+#define PrintErrorExit(_string) { \
+	printf("ERROR: %s\n", _string); \
+	goto program_exit; \
+}
+
 ConsoleAppEntryPoint(args, argsCount) {
 	#ifdef APAD_DEBUG
-		#if 0
-		args[1] = "add";
-		args[2] = "-s";
-		args[3] = "new task";
-		args[4] = "mon";
-		// args[4] = "+2";
-		argsCount = 5;	
+		#if 1
+		char* debugArgs[] = { args[0], "add", "-s", "task text", "-t", "tag1", "tag2", "-dd", "20/02" };
+		args = debugArgs;
+		argsCount = GetArrayLength(debugArgs);	
 		#endif
 	#endif
 	
@@ -59,12 +62,13 @@ ConsoleAppEntryPoint(args, argsCount) {
 	}
 	
 	// Data to be parsed from arguments
+	// Arguments not needed for the required command will be ignored
 	string command;
 	string taskString;
 	string dateAdded;
-	string targetDate;
-	string flag;
+	string dateDue;
 	string tags[MaxTags];
+	ui8    tagsPresent = 0;
 
 	// Parse and check command
 	command = args[1];
@@ -92,17 +96,17 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(arg == ValidOptions[ValidOptionsIndex::TaskString]) {
 			it += 1;
 			CheckArgsExit();
-			taskString = args[it];
+			taskString = args[it]; // @TODO - Check correctness
 		}
 		else if(arg == ValidOptions[ValidOptionsIndex::DateAdded]) {
 			it += 1;
 			CheckArgsExit();
-			dateAdded = args[it]; // @TODO - Check format
+			dateAdded = args[it]; // @TODO - Check correctness
 		}
 		else if(arg == ValidOptions[ValidOptionsIndex::DateDue]) {
 			it += 1;
 			CheckArgsExit();
-			dateDue = args[it]; // @TODO - Check format
+			dateDue = args[it]; // @TODO - Check correctness
 		}
 		else if(arg == ValidOptions[ValidOptionsIndex::Tags]) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
@@ -114,8 +118,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 				string s = args[it];
 				bool option = FindSubstring("-", s);
 				if(option == false)
-					tags[count++] = arg;
+					tags[count++] = s;
 				else {
+					tagsPresent = count;
 					it -= 1;
 					break;
 				}
@@ -125,8 +130,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 		#if 0
 		else if(IsDate(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
       if(arg[0] == '.') {
-				if(targetDate.length == 0)
-					targetDate = DateToString(GetDate(0));
+				if(dateDue.length == 0)
+					dateDue = DateToString(GetDate(0));
 				else {
 					PrintErrorExit("Target date already supplied: %s\n", (char*)arg);
 					goto program_exit;
@@ -160,7 +165,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					goto program_exit;
 				}
 				
-				if(targetDate.length == 0) {
+				if(dateDue.length == 0) {
 					ui16 calendarDays = 0;
 					{
 						si32 days = StringToInt(daysString);
@@ -175,7 +180,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 							calendarDays = days;
 					}
 				
-					targetDate = DateToString(GetDate(calendarDays));
+					dateDue = DateToString(GetDate(calendarDays));
 				}
 				else if(reschedulePeriod.length == 0)
 					reschedulePeriod = arg.chars + 1;
@@ -185,8 +190,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 				}						
 			}
 			else {
-				if(targetDate.length == 0)
-					targetDate = DateToString(StringToDate(arg)); // Conversion back and forth to set the standard date format dd/mm/yyyy
+				if(dateDue.length == 0)
+					dateDue = DateToString(StringToDate(arg)); // Conversion back and forth to set the standard date format dd/mm/yyyy
 				else {
 					PrintErrorExit("Target date already supplied\n", arg);
 					goto program_exit;
@@ -238,33 +243,25 @@ ConsoleAppEntryPoint(args, argsCount) {
 		#endif
 	}	
 	
-	#if 0
-	
-	// Check minimum required arguments have been supplied
-	if(taskString.length == 0) {
-		PrintErrorExit("No task string specified.\n");
-		goto program_exit;
-	}
+	#ifdef APAD_DEBUG
+	string dataPath = "..\\..\\data\\tasklist.txt";
+	#else
+	string dataPath = "data/tasklist.txt";
+	#endif
 	
 	// Open the tasks file and generate task list
 	file tasksFile = {};
 	{
-		#ifdef APAD_DEBUG
-		string dataPath = "..\\..\\data\\tasklist.txt";
-		#else
-		string dataPath = "data/tasklist.txt";
-		#endif 
+		 
 				
-		if(Win32FileExists(dataPath) == false) { // @TODO - Replace with File API function once bug is fixed
+		if(Win32FileExists(dataPath) == false) // @TODO - Replace with File API function once bug is fixed
 			PrintErrorExit("Couldn't find data/tasklist.txt\n");
-			goto program_exit;
-		}
 		
 		tasksFile = Win32LoadFile(dataPath); // @TODO - Replace with File API function once bug is fixed
-		if(ErrorIsSet() == true) {
+		if(ErrorIsSet() == true)
 			PrintErrorExit("Couldn't load data/tasklist.txt");
-			goto program_exit;
-		}
+		
+		#if 0
 		
 		// Parse tasks - see data/format.txt
 		
@@ -328,26 +325,33 @@ ConsoleAppEntryPoint(args, argsCount) {
 				data = Null;
 			}
 		}
+		
+		#endif
 	}
 	
 	// Parse command, output error message if invalid
 	if(command == ValidCommands[ValidCommandsIndex::Add]) {
 		string dateAdded = DateToString(GetDate(0));
 		
-		string command;
-		string taskString;
-		string targetDate;
-		string reschedulePeriod;
-		string flag;
-		string tags[MaxTags];
+		auto stack = AllocateStack(128);
+		PushString((string)"\"" + taskString + "\" ", false, stack);
+		PushString(dateAdded + " ", false, stack);
+		PushString(dateDue + " ", false, stack);
+		if(tagsPresent == 0)
+			PushString("-", false, stack);
+		else {
+			ForAll(tagsPresent)
+				PushString((string)"\"" + tags[it] + "\" ", false, stack);
+		}
+				
+		PushString("\r\n", false, stack);
 		
-		// @TODO - Read the file, create internal task list, append new task, save to file
+		Win32SaveFile(stack.memory, stack.size, dataPath);
+		
+		FreeStack(stack);
 		
 		printf("Task added\n");
-		
-		PrintDetailedTask(Null, taskString, dateAdded, targetDate, reschedulePeriod, flag, tags);
-		
-		// @TODO - Store in tasklist.txt
+		PrintDetailedTask(Null, taskString, dateAdded, dateDue, tags);
 		
 		goto program_exit;
 	}
@@ -445,8 +449,6 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		#endif
 	}
-	else if(command == ValidCommands[ValidCommandsIndex::Delete]) { // Delete - @TODO
-	}
 	else if(command == ValidCommands[ValidCommandsIndex::Modify]) { // Modify - @TODO
 		// @TODO
 		// Print the details which have been updated, followed by the entire task data
@@ -456,18 +458,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 		// before and after, then display the updated entry will all info
 
 	}
-	else if(command == ValidCommands[ValidCommandsIndex::Reschedule]) { // Reschedule @TODO
-	}
-	else if(command == ValidCommands[ValidCommandsIndex::Undo]) { // @TODO
-	}
-	else if(command == ValidCommands[ValidCommandsIndex::Redo]) { // @TODO
-	}
 	else {
 		PrintErrorExit("Invalid command supplied.\n");
 		goto program_exit;
 	}
-	
-	#endif
 	
 	program_exit:
 	

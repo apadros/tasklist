@@ -1,43 +1,29 @@
-#include <stdio.h>
-void PrintErrorExit(const char* string) {
-	printf("ERROR: %s\n", string); 
-	goto program_exit;
-}
-
 bool IsValidChar(char c) {
   return IsLetter(c) == true || IsNumber(c) == true || c == '\"' || c == '/' || c == '-' || c == '?' || c == '!' || c == '#';
 }
 
-void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char* reschedulePeriod, const char* flag, string* groups) {
+void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, string* tags) {
   // @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
 	// AssertRet(task != Null);
-	// AssertRet(dateAdded != Null);
+	AssertRet(dateAdded != Null);
 	// AssertRet(dateDue != Null);
-	// AssertRet(reschedulePeriod	!= Null);
-	// AssertRet(flag != Null);
-	// AssertRet(groups != Null);
+	AssertRet(tags!= Null);
 	
 	id = "-"; // @TODO - Update once IDs are implemented
-	if(reschedulePeriod == Null)
-		reschedulePeriod = "-";
-	if(flag == Null)
-		flag = "-";
 	
 	printf("ID:         %s\n", id);
 	printf("String:     %s\n", task);
 	printf("Date added: %s\n", dateAdded);
 	printf("Date due:   %s\n", dateDue);
-	printf("Reschedule: %s\n", reschedulePeriod);
-	printf("Flag:       %s\n", flag);
-	printf("Groups:     ");
-	if(groups[0] == Null) // If no groups supplied
+	printf("Tags:     	");
+	if(tags[0].length == 0) // If no tags supplied
 		printf("-\n");
 	else { 
-		printf("%s\n", (char*)groups[0]);
+		printf("%s\n", (char*)tags[0]);
 		FromTo(1, MaxTags) {
-			if(groups[it] != Null)
-				printf("            %s\n", (char*)groups[it]);
+			if(tags[it].length > 0)
+				printf("            %s\n", (char*)tags[it]);
 		}
 	}
 }
