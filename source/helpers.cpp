@@ -12,18 +12,18 @@ void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, 
 	
 	id = "-"; // @TODO - Update once IDs are implemented
 	
-	printf("ID:         %s\n", id);
-	printf("String:     %s\n", task);
-	printf("Date added: %s\n", dateAdded);
-	printf("Date due:   %s\n", dateDue);
-	printf("Tags:     	");
+	printf("  ID:         %s\n", id);
+	printf("  String:     %s\n", task);
+	printf("  Date added: %s\n", dateAdded);
+	printf("  Date due:   %s\n", dateDue);
+	printf("  Tags:       ");
 	if(tags[0].length == 0) // If no tags supplied
 		printf("-\n");
 	else { 
 		printf("%s\n", (char*)tags[0]);
 		FromTo(1, MaxTags) {
 			if(tags[it].length > 0)
-				printf("            %s\n", (char*)tags[it]);
+				printf("              %s\n", (char*)tags[it]);
 		}
 	}
 }

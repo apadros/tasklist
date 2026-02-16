@@ -107,6 +107,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 			it += 1;
 			CheckArgsExit();
 			dateDue = args[it]; // @TODO - Check correctness
+			
+			// Convert to long date format
+			if(IsDate(dateDue) == true)
+				dateDue = DateToString(StringToDate(dateDue)); // @TODO - Simplify this?
+			else
+				PrintErrorExit("Incorrect date due format");
 		}
 		else if(arg == ValidOptions[ValidOptionsIndex::Tags]) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
@@ -331,7 +337,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Parse command, output error message if invalid
 	if(command == ValidCommands[ValidCommandsIndex::Add]) {
-		string dateAdded = DateToString(GetDate(0));
+		dateAdded = DateToString(GetDate(0)); // @CURRENT @BUG - For whatever reason, this updates both dateDue and dateAdded with the sample value.
 		
 		auto stack = AllocateStack(128);
 		PushString((string)"\"" + taskString + "\" ", false, stack);
@@ -350,7 +356,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		
 		FreeStack(stack);
 		
-		printf("Task added\n");
+		printf("\nTask added\n");
 		PrintDetailedTask(Null, taskString, dateAdded, dateDue, tags);
 		
 		goto program_exit;
