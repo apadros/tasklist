@@ -337,8 +337,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Parse command, output error message if invalid
 	if(command == ValidCommands[ValidCommandsIndex::Add]) {
-		dateAdded = DateToString(GetDate(0)); // @CURRENT @BUG - For whatever reason, this updates both dateDue and dateAdded with the sample value.
-		
+		// @CURRENT @BUG - Too much encapsulation in API time -> string -> memory, string data is overwritten without meaning to, leads to the bug underneath.
+		dateAdded = DateToString(GetDate(0)); // @BUG - Overwrites both dateDue and dateAdded
+				
 		auto stack = AllocateStack(128);
 		PushString((string)"\"" + taskString + "\" ", false, stack);
 		PushString(dateAdded + " ", false, stack);

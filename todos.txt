@@ -1,5 +1,7 @@
 Testbench / testbenches
 
+@CURRENT - Awaiting updates to API regarding encapsulation and hidden states / date overwriting.
+
 Dates
 	- <=[date] less than or equal to [date]
 		- Same for <, >, >= etc
