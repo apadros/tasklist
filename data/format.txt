@@ -3,4 +3,4 @@
 [task text]  - "ASCII string between speech marks"
 [date added] - dd/mm/yyyy
 [date due]   - dd/mm/yyyy or - if none 
-[tags]       - ASCII strings between speech marks, up to 5 seprated by a space, or - if none
+[tags]       - "ASCII strings between speech marks", up to 5 seprated by a space, or - if none

@@ -7,17 +7,23 @@
 // Storage refers to data duration within the program (e.g block scope, until program termination etc).
 // Linkage refers to wether data is accessible or has already been declared elsewhere (e.g. other translation units).
 // Data can also have no linkage whatsoever, meaning it can only be referred to in its current scope.
-#define program_local static // Local variable or translation unit variable with program duration.
-#define program_external extern // Program duration, external linkage. 
-                                // Can only be used in global scope
-								// Need to be initialised in a translation unit, otherwise there'll be a multiple symbols error.
-// Previously this was extern inline... difference?
-#define program_unique inline // To enable a single definition to be copied to several translation units (e.g. within a header file).
-                              // Can only be used in global scope.
-						      // Requires at least c++17
-#define shared_member static // For struct members, single member shared across struct instances.
-                             // Will exist even if not variables of that struct are instantiated.
-#define inited_member inline static // Allows a struct variable or function to be initialised directly inside the struct, no need for external code.
+
+				// Local variable or translation unit variable with program duration.
+#define program_local static
+				// Program duration, external linkage.
+				// Can only be used in global scope
+				// Need to be initialised in a translation unit, otherwise there'll be a multiple symbols error.
+				// Previously this was extern inline... difference?
+#define program_external extern  								
+				// To enable a single definition to be copied to several translation units (e.g. within a header file).
+        // Can only be used in global scope.
+				// Requires at least c++17
+#define program_unique inline 
+				// For struct members, single member shared across struct instances.
+        // Will exist even if not variables of that struct are instantiated.
+#define shared_member static 
+				// Allows a struct variable or function to be initialised directly inside the struct, no need for external code.
+#define inited_member inline static 
 
 // Looping
 #define For for
@@ -52,13 +58,13 @@
 #define ClearBit(_bit, _field) (_field = decltype(_field)((ui32)(_field) & (~(ui32)(_bit))))
 #define SetBit(_bit, _field) (_field = decltype(_field)((ui32)(_field) | (ui32)(_bit)))
 
-// DLLs
-#ifdef APAD_DLL
-#define imported_function __declspec( dllimport )
-#define exported_function __declspec( dllexport )
+// Linking
+#ifdef APAD_INTERNAL
+#define dll_import 
+#define dll_export
 #else
-#define imported_function 
-#define exported_function 
+#define dll_import __declspec( dllimport )
+#define dll_export __declspec( dllexport )
 #endif
 	
 

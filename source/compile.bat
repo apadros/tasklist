@@ -3,7 +3,7 @@
 if not exist build ( mkdir build )
 pushd build
 
-cl /I..\..\lib64 /c /w /nologo ..\main.cpp
+cl /I..\..\apad_api_lib64 /c /w /nologo /std:c++17 ..\main.cpp
 
 popd
 exit /b

@@ -2,7 +2,7 @@ bool IsValidChar(char c) {
   return IsLetter(c) == true || IsNumber(c) == true || c == '\"' || c == '/' || c == '-' || c == '?' || c == '!' || c == '#';
 }
 
-void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, string* tags) {
+void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char** tags) {
   // @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
 	// AssertRet(task != Null);
@@ -17,12 +17,12 @@ void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, 
 	printf("  Date added: %s\n", dateAdded);
 	printf("  Date due:   %s\n", dateDue);
 	printf("  Tags:       ");
-	if(tags[0].length == 0) // If no tags supplied
+	if(tags == Null) // If no tags supplied
 		printf("-\n");
 	else { 
 		printf("%s\n", (char*)tags[0]);
 		FromTo(1, MaxTags) {
-			if(tags[it].length > 0)
+			if(tags[it] != Null)
 				printf("              %s\n", (char*)tags[it]);
 		}
 	}
@@ -53,8 +53,8 @@ void PrintTaskWide(const char* id, const char* task, const char* dateAdded, cons
 		if(contents[it] != Null)
 			content = contents[it];
 		
-		auto headerLength = GetStringLength(header, false);
-	  auto contentLength = GetStringLength(content, false);
+		auto headerLength = GetStringLength(header);
+	  auto contentLength = GetStringLength(content);
 		
 	  lengths[it] = Max(headerLength, contentLength) + 2;
 	}
@@ -66,7 +66,7 @@ void PrintTaskWide(const char* id, const char* task, const char* dateAdded, cons
 		ui16 finalLength = lengths[it];
 		
 		printf(" %s ", header);	
-		ui16 headerLength = GetStringLength(header, false);
+		ui16 headerLength = GetStringLength(header);
 		totalHeadersLength += 1 + headerLength + 1;
 		si16 printLength = finalLength - (headerLength + 2);
 		if(printLength > 0) {
@@ -83,7 +83,7 @@ void PrintTaskWide(const char* id, const char* task, const char* dateAdded, cons
 	{
 		const char* string = " Groups ";
 	  printf(string);
-	  totalHeadersLength += GetStringLength(string, false);
+	  totalHeadersLength += GetStringLength(string);
 	}
 	printf("\n");
 	
@@ -100,7 +100,7 @@ void PrintTaskWide(const char* id, const char* task, const char* dateAdded, cons
 		ui16 finalLength = lengths[it];
 		
 		printf(" %s ", content);
-		si16 printLength = finalLength - (GetStringLength(content, false) + 2);
+		si16 printLength = finalLength - (GetStringLength(content) + 2);
 		if(printLength > 0) {
 			ForAll(printLength)
 				printf(" ");

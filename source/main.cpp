@@ -13,26 +13,26 @@
 #include "apad_time.h"
 #include "apad_win32.h"
 
-			string DateFormatShort  = "dd/mm";
-			string DateFormatMedium = "dd/mm/yy";
-			string DateFormatLong   = "dd/mm/yyyy";
-const ui8 	 MaxTags = 5;
+const char* DateFormatShort  = "dd/mm";
+const char* DateFormatMedium = "dd/mm/yy";
+const char* DateFormatLong   = "dd/mm/yyyy";
+const ui8 	MaxTags = 5;
 
 #include "helpers.cpp"
 
-string 		ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
+const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
 BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
 
-string    ValidOptions[] =   { "-s", "-da", "-dd", "-t" };
+const char* ValidOptions[] =   { "-s", "-da", "-dd", "-t" };
 BeginEnum(ValidOptionsIndex) { TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidOptionsIndex);
 
 
 struct taskListEntry {
-	string task;
-	string dateAdded;
-	string dateDue;
-	char   flag;
-	string tags[MaxTags];
+	const char* task;
+	const char* dateAdded;
+	const char* dateDue;
+				char  flag;
+	const char* tags[MaxTags];
 };
 
 #include <stdio.h>
@@ -44,7 +44,7 @@ struct taskListEntry {
 ConsoleAppEntryPoint(args, argsCount) {
 	#ifdef APAD_DEBUG
 		#if 1
-		char* debugArgs[] = { args[0], "add", "-s", "task text", "-t", "tag1", "tag2", "-dd", "20/02" };
+		char* debugArgs[] = { args[0], "add", "-s", "task text", "-t", "tag1", "tag2", "-dd", "20/03" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
@@ -63,19 +63,18 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Data to be parsed from arguments
 	// Arguments not needed for the required command will be ignored
-	string command;
-	string taskString;
-	string dateAdded;
-	string dateDue;
-	string tags[MaxTags];
-	ui8    tagsPresent = 0;
+	const char* command;
+	const char* taskString;
+	const char* dateAdded;
+	const char* dateDue;
+	const char* tags[MaxTags] = { Null };
 
 	// Parse and check command
 	command = args[1];
 	{
 		bool found = false;
 		ForAll(ValidCommandsIndex::Length) {
-			if(command == ValidCommands[it]) {
+			if(StringsAreEqual(command, ValidCommands[it]) == true) {
 				found = true;
 				break;
 			}
@@ -91,19 +90,19 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Parse options
 	FromTo(2, argsCount) {
-		string arg = args[it];
+		const char* arg = args[it];
 		
-		if(arg == ValidOptions[ValidOptionsIndex::TaskString]) {
+		if(StringsAreEqual(arg, ValidOptions[ValidOptionsIndex::TaskString]) == true) {
 			it += 1;
 			CheckArgsExit();
 			taskString = args[it]; // @TODO - Check correctness
 		}
-		else if(arg == ValidOptions[ValidOptionsIndex::DateAdded]) {
+		else if(StringsAreEqual(arg, ValidOptions[ValidOptionsIndex::DateAdded]) == true) {
 			it += 1;
 			CheckArgsExit();
 			dateAdded = args[it]; // @TODO - Check correctness
 		}
-		else if(arg == ValidOptions[ValidOptionsIndex::DateDue]) {
+		else if(StringsAreEqual(arg, ValidOptions[ValidOptionsIndex::DateDue]) == true) {
 			it += 1;
 			CheckArgsExit();
 			dateDue = args[it]; // @TODO - Check correctness
@@ -114,19 +113,18 @@ ConsoleAppEntryPoint(args, argsCount) {
 			else
 				PrintErrorExit("Incorrect date due format");
 		}
-		else if(arg == ValidOptions[ValidOptionsIndex::Tags]) {
+		else if(StringsAreEqual(arg, ValidOptions[ValidOptionsIndex::Tags]) == true) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
 			ui8 count = 0;
 			while(count < MaxTags) {
 				it += 1;
 				CheckArgsExit();
 				
-				string s = args[it];
+				const char* s = args[it];
 				bool option = FindSubstring("-", s);
 				if(option == false)
 					tags[count++] = s;
 				else {
-					tagsPresent = count;
 					it -= 1;
 					break;
 				}
@@ -144,7 +142,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				}
 			}
 			else if(arg[0] == '+') {
-				string daysString = arg.chars + 1;
+				const char* daysString = arg.chars + 1;
 				
 				// Determine validity and whether work days have been specified
 				bool isValid = true;
@@ -212,7 +210,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				goto program_exit;
 			}
 		}
-		else if(arg == "-t") { // Tags
+		else if(StringsAreEqual(arg, "-t") == true) { // Tags
 			it += 1;
 			
 			if(it == argsCount) {
@@ -250,9 +248,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 	}	
 	
 	#ifdef APAD_DEBUG
-	string dataPath = "..\\..\\data\\tasklist.txt";
+	const char* dataPath = "..\\..\\data\\tasklist.txt";
 	#else
-	string dataPath = "data/tasklist.txt";
+	const char* dataPath = "data/tasklist.txt";
 	#endif
 	
 	// Open the tasks file and generate task list
@@ -291,12 +289,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(*c == '\n') { // Add task to list
 				#if 0
 				struct taskListEntry {
-					string task;
-					string dateAdded;
-					string dateDue;
-					ui8    reschedulePeriod;
-					char   flag;
-					string tags[MaxTags];
+					const char* task;
+					const char* dateAdded;
+					const char* dateDue;
+								ui8   reschedulePeriod;
+								char  flag;
+					const char* tags[MaxTags];
 				};
 				#endif
 				
@@ -336,33 +334,28 @@ ConsoleAppEntryPoint(args, argsCount) {
 	}
 	
 	// Parse command, output error message if invalid
-	if(command == ValidCommands[ValidCommandsIndex::Add]) {
-		// @CURRENT @BUG - Too much encapsulation in API time -> string -> memory, string data is overwritten without meaning to, leads to the bug underneath.
-		dateAdded = DateToString(GetDate(0)); // @BUG - Overwrites both dateDue and dateAdded
+	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Add]) == true) {
+		dateAdded = DateToString(GetDate(0)); // @TODO - Check overwriting of both dateDue and dateAdded has been solved
 				
-		auto stack = AllocateStack(128);
-		PushString((string)"\"" + taskString + "\" ", false, stack);
-		PushString(dateAdded + " ", false, stack);
-		PushString(dateDue + " ", false, stack);
-		if(tagsPresent == 0)
-			PushString("-", false, stack);
+		const char* string = Concatenate(7, "\"", taskString, "\" ", dateAdded, " ", dateDue, " ");
+		if(tags[0] == Null)
+			string = Concatenate(2, string, "-");
 		else {
-			ForAll(tagsPresent)
-				PushString((string)"\"" + tags[it] + "\" ", false, stack);
+			ForAll(MaxTags) {
+				if(tags[it] != Null)
+					string = Concatenate(4, string, "\"", tags[it], "\" ");
+			}
 		}
-				
-		PushString("\r\n", false, stack);
+		string = Concatenate(2, string, "\r\n"); 
 		
-		Win32SaveFile(stack.memory, stack.size, dataPath);
-		
-		FreeStack(stack);
+		Win32SaveFile((void*)string, GetStringLength(string), dataPath);
 		
 		printf("\nTask added\n");
 		PrintDetailedTask(Null, taskString, dateAdded, dateDue, tags);
 		
 		goto program_exit;
 	}
-	else if(command == ValidCommands[ValidCommandsIndex::List]) {
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true) {
 		#if 0
 	  // @TODO
 		// By string, ID, flags & tags, - means not
@@ -381,7 +374,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		bool printDetailed = false;
 		FromTo(2, argsCount) {
 			const char* arg = args[it];
-			if(arg == "-d")
+			if(StringsAreEqual(arg, "-d") == true)
 				printDetailed = true;
 		}
 		
@@ -456,7 +449,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		#endif
 	}
-	else if(command == ValidCommands[ValidCommandsIndex::Modify]) { // Modify - @TODO
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) { // Modify - @TODO
 		// @TODO
 		// Print the details which have been updated, followed by the entire task data
 		// - E.g. Task ID / flag / group updated
