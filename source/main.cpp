@@ -24,7 +24,6 @@ BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } 
 const char* ValidArguments[] =   { "-s", "-da", "-dd", "-t" };
 BeginEnum(ValidArgumentsIndex) { TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidArgumentsIndex);
 
-
 struct todoListEntry {
 	const char* task;
 	const char* dateAdded;
@@ -39,7 +38,15 @@ struct todoListEntry {
 	goto program_exit; \
 }
 
+void ExitFunction() {
+	// @TODO
+}
+
 ConsoleAppEntryPoint(args, argsCount) {
+	SetDisplayAPIAssertions(true);
+	SetCallExitInAPIAssertions(false);
+	SetExitIfAssertionHit(false);
+	
 	#ifdef APAD_DEBUG
 		#if 1
 		char* debugArgs[] = { args[0], "add", "sample task" };
@@ -82,8 +89,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 			PrintErrorExit("Invalid command\n");
 	}
 	
-	#define CheckArgsExit() if(it >= argsCount) \
-														PrintErrorExit("Not enough arguments supplied.");
+	#define CheckArgsExit() { if(it >= argsCount) \
+															PrintErrorExit("Not enough arguments supplied."); }
 			
 	// Parse arguments
 	FromTo(2, argsCount) {
@@ -92,34 +99,41 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::TaskString]) == true) {
 			it += 1;
 			CheckArgsExit();
-			taskString = args[it]; // @TODO - Check correctness
+			taskString = args[it];
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::DateAdded]) == true) {
 			it += 1;
 			CheckArgsExit();
-			dateAdded = args[it]; // @TODO - Check correctness
+			dateAdded = args[it];
+			if(IsDate(dateAdded) == false)
+				PrintErrorExit("Invalid date added specified\n");
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::DateDue]) == true) {
 			it += 1;
 			CheckArgsExit();
-			dateDue = args[it]; // @TODO - Check correctness
+			dateDue = args[it];
+			
+			if(IsDate(dateAdded) == false)
+				PrintErrorExit("Invalid date due specified\n");
 			
 			// Convert to long date format
-			if(IsDate(dateDue) == true)
-				dateDue = DateToString(StringToDate(dateDue)); // @TODO - Simplify this?
-			else
-				PrintErrorExit("Incorrect date due format");
+			dateDue = DateToString(StringToDate(dateDue)); // @TODO - Simplify this?
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tags]) == true) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
 			ui8 count = 0;
 			while(count < MaxTags) {
 				it += 1;
-				CheckArgsExit();
+				
+				if(count == 0) {
+					CheckArgsExit();
+				}
+				else if(it >= argsCount) // Reached the end of the arguments, not necessarily an error
+					goto program_exit;
 				
 				const char* s = args[it];
-				bool option = FindSubstring("-", s);
-				if(option == false)
+				bool arg = FindSubstring("-", s);
+				if(arg == false)
 					tags[count++] = s;
 				else {
 					it -= 1;
@@ -253,11 +267,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 	// Open the todos file and generate task list
 	file todosFile = {};
 	{
-		if(Win32FileExists(dataPath) == false) // @TODO - Replace with File API function once bug is fixed
+		if(FileExists(dataPath) == false)
 			PrintErrorExit("Couldn't find data/todos.txt\n");
 		
-		todosFile = Win32LoadFile(dataPath); // @TODO - Replace with File API function once bug is fixed
-		if(ErrorIsSet() == true)
+		todosFile = LoadFile(dataPath);
+		if(AssertionWasHit() == true)
 			PrintErrorExit("Couldn't load data/todos.txt");
 		
 		#if 0
@@ -330,7 +344,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Parse command, output error message if invalid
 	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Add]) == true) {
-		dateAdded = DateToString(GetDate(0)); // @TODO - Check overwriting of both dateDue and dateAdded has been solved
+		dateAdded = DateToString(GetDate(0));
 				
 		const char* string = Concatenate(7, "\"", taskString, "\" ", dateAdded, " ", dateDue, " ");
 		if(tags[0] == Null)
@@ -343,7 +357,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		string = Concatenate(2, string, "\r\n"); 
 		
-		Win32SaveFile((void*)string, GetStringLength(string), dataPath);
+		SaveFile((void*)string, GetStringLength(string), dataPath);
 		
 		printf("\nTask added\n");
 		PrintDetailedTask(Null, taskString, dateAdded, dateDue, tags);
@@ -461,10 +475,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 	program_exit:
 	
 	// @TODO - Renable
-	#if 0
 	if(IsValid(todosFile) == true)
-		FreeMemory(todosFile); // @TODO - Replace with File API function once bug is fixed
-	#endif
+		FreeFile(todosFile);
 	
 	printf("\n");
 	

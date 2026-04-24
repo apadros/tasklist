@@ -5,6 +5,8 @@ Key
 Core commands
 	- Add
 		- Testing @WIP
+		- Currently a new save file is created for each task added. Have the task added to a global list, 
+			then have a single save call at the end.
 	- List
 		- Testing
 	- Delete
