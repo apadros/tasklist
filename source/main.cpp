@@ -44,8 +44,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 	RegisterExitFunction(ExitFunction); // @TODO - Test this works
 	
 	#ifdef APAD_DEBUG
-		#if 0
-		char* debugArgs[] = { args[0], "add", "-s", "test task" };
+		#if 1
+		char* debugArgs[] = { args[0], "add", "-s", "task x", "-t", "tag1", "tag2", "tag3", "-dd", "05/07" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
@@ -115,7 +115,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			CheckArgsExit();
 			dateDue = args[it];
 			
-			if(IsDate(dateAdded) == false)
+			if(IsDate(dateDue) == false)
 				PrintErrorExit("Invalid date due specified");
 			
 			// Convert to long date format
@@ -131,7 +131,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					CheckArgsExit();
 				}
 				else if(it >= argsCount) // Reached the end of the arguments, not necessarily an error
-					goto program_exit;
+					break;
 				
 				const char* s = args[it];
 				bool arg = FindSubstring("-", s);
@@ -142,6 +142,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 					break;
 				}
 			}
+		}
+		else {
+			PrintErrorExit("Invalid command option"); // @TODO - Go to specific help message
 		}
 		
 		#if 0
@@ -422,7 +425,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				printf("\n");
 			}
 			else if(toStore == Null && IsValidChar(c) == true) {
-				if(c == '\"') { // Beginning of the task string
+				if(c == '\"') { // Beginning of the task string //@WIP - This also ends up reading tags as separate task strings. Might be better to work on APAD file API extension first, then return to this
 					toStore = data + it + 1;
 					scanningTaskString = true;
 				}

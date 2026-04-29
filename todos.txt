@@ -20,6 +20,7 @@ Core commands
 	- Redo
 		- Testing
 	- Help message - same as not supplying args
+	- Custom help message with relevant options for each command
 	
 Command arguments
 	- Task string (-s)
