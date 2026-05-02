@@ -50,6 +50,8 @@ dll_import void*  			Push(ui32 size, memory_stack& stack);
 dll_import void*			  Push(void* memory, ui32 size, memory_stack& stack); 
 #define                 PushInstance(_inst, _stack) \
 												  Push(&(_inst), sizeof(_inst), (_stack))
+#define 								PushStruct(_structType, _stack) \
+													(_structType*)Push(sizeof(_structType), (_stack))
 
 dll_import void 				ResetStack(memory_stack& stack);
 

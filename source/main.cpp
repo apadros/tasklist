@@ -276,7 +276,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		char* dateDue; 	 		 // Can be Null
 		char* tags[MaxTags]; // Can all be Null
 	};
-	memory_stack todoList;
+	memory_stack todoList = AllocateStack();
 	ui16 				 todosCount = 0;
 	{
 		if(FileExists(dataPath) == false)
@@ -286,47 +286,24 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(AssertionWasHit() == true)
 			PrintErrorExit("Couldn't load data/todos.txt");
 		
-		// Extract data
-		todoList = AllocateStack(Null);
-		todoListEntry* entry = Null;
-		bool readingString = false;
-		bool readingData = false;
-		for(ui32 it = 0; it < todosFile.size; it += 1) {
-			char* c = (char*)todosFile.memory + it;
+		// Extract line data
+		LineReadLoopHeader(readIndex, todosFile) {
+			auto line = ReadLine(todosFile, readIndex);
+			Assert(LineIsValid(line));
+			Assert(line.count >= 4);
+			Assert(line.count <= 3 + MaxTags);
 			
-			if(*c == '"') { // Read the task string
-				if(readingString == false) {
-					entry = (todoListEntry*)Push(sizeof(todoListEntry), todoList);
-					todosCount += 1;
-					entry->task = c + 1;
-				}
-				else
-					*c = '\0';
-				
-				Toggle(readingString);
-			}			
-			else if(readingString == false && readingData == false) {
-				if(IsWhitespace(*c) == true)
-					*c = '\0';
-				else if(*c != '-') {
-					if(entry->dateAdded == Null) {
-						entry->dateAdded = c;
-						readingData = true;
-					}
-					else if(entry->dateDue == Null) {
-						entry->dateDue = c;
-						readingData = true;
-					}
-					else { // Tags
-						AddToArray(c, entry->tags, Null);
-						readingData = true;
-					}
-				}
+			auto* entry = PushStruct(todoListEntry, todoList);
+			entry->task = GetLineDataElement(line, 0);
+			entry->dateAdded = GetLineDataElement(line, 1);
+			entry->dateDue = GetLineDataElement(line, 2);
+			FromTo(3, line.count) {
+				char* tag = GetLineDataElement(line, it);
+				if(it > 3 || tag[0] != '-')
+					entry->tags[it - 3] = tag;
 			}
-			else if(readingString == false && readingData == true && IsWhitespace(*c) == true) {
-				*c = '\0';
-				readingData = false;
-			}
+			
+			FreeLine(line);
 		}
 	}
 	
@@ -370,8 +347,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true) {
-		#if 0
-	  // @TODO
+		// @TODO
 		// By string, ID, flags & tags, - means not
 		// <60 days & >60 days
 		// Automatically list preempt tasks with a date <30 days when listing priority tasks?
@@ -385,83 +361,6 @@ ConsoleAppEntryPoint(args, argsCount) {
 		// @TODO - Specify which info columns are wanted - -da (date added) -dd (date due) etc ?
 		
 		// Scan through remaining arguments
-		bool printDetailed = false;
-		FromTo(2, argsCount) {
-			const char* arg = args[it];
-			if(StringsAreEqual(arg, "-d") == true)
-				printDetailed = true;
-		}
-		
-		char*       data = (char*)calendar.memory;
-		const char* id = Null;
-		const char* task = Null;
-		const char* dateAdded = Null;
-		const char* dateDue = Null;
-		const char* reschedulePeriod = Null;
-		const char* flag = Null;
-		const char* tags[MaxTags] = { Null };
-		
-		const char* toStore = Null; // Temp string
-		bool        scanningTaskString = false;
-		ForAll(calendar.size) {
-			char c = data[it];
-			
-			if(c == '\n') { // Reset task data
-				if(printDetailed == true)
-					PrintDetailedTask(id, task, dateAdded, dateDue, reschedulePeriod, flag, tags);
-				else
-					PrintTaskWide(id, task, dateAdded, dateDue, reschedulePeriod, flag, tags);
-				
-				id = Null;
-				task = Null;
-				dateAdded = Null;
-				dateDue = Null;
-				reschedulePeriod = Null;
-				flag = Null;
-				
-				ForAll(MaxTags)
-					tags[it] = Null;
-					
-				printf("\n");
-			}
-			else if(toStore == Null && IsValidChar(c) == true) {
-				if(c == '\"') { // Beginning of the task string //@WIP - This also ends up reading tags as separate task strings. Might be better to work on APAD file API extension first, then return to this
-					toStore = data + it + 1;
-					scanningTaskString = true;
-				}
-				else
-					toStore = data + it;
-			}
-			else if(scanningTaskString == true && c == '\"') { // Finish scanning task string
-			  data[it] = '\0';
-				task = toStore;
-				toStore = Null;
-				scanningTaskString = false;
-			}
-			else if(scanningTaskString == false && toStore != Null && IsValidChar(c) == false) { // Finish scanning other data
-				data[it] = '\0';
-				
-				if(dateAdded == Null)
-					dateAdded = toStore;
-				else if(dateDue == Null)
-					dateDue = toStore;
-				else if(reschedulePeriod == Null)
-					reschedulePeriod = toStore;
-				else if(flag == Null)
-					flag = toStore;
-				else if(task != Null) {
-					ForAll(MaxTags) {
-						if(tags[it] == Null) {
-							tags[it] = toStore;
-							break;
-						}
-					}
-				}
-				
-				toStore = Null;
-			}
-		}
-		#endif
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) { // Modify - @TODO
 		// @TODO

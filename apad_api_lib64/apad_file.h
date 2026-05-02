@@ -27,6 +27,7 @@ struct file_line {
 	ui8          count;
 };
 
+#define              LineReadLoopHeader(_readIndex, _file) for(ui32 _readIndex = 0; _readIndex < (_file).size; )
 dll_import file_line ReadLine(file& f, ui32& readIndex); // Will treat any data between quotation marks as a single string
 dll_import bool      LineIsValid(file_line& f);
 dll_import char* 		 GetLineDataElement(file_line& line, ui8 index);
