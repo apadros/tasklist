@@ -41,16 +41,16 @@ dll_import void         SetInvalid(memory_block& block);
 
 // ******************** Stack functionality ******************** //
 
-dll_import memory_stack AllocateStack(ui32 capacity /* Can set to Null */);
-dll_import void 				 FreeStack(memory_stack& stack);
+dll_import memory_stack AllocateStack(ui32 capacity = Null);
+dll_import void 				FreeStack(memory_stack& stack);
 
 // All of these will allocate a new stack with a minimum of 2x capacity if not enough space is available for the push.
 // As such it is strongly discouraged to store pointers into stack memory and to treat it as a single block.
-dll_import void* 			 Push(ui32 size, memory_stack& stack);
-dll_import void*			 Push(void* memory, ui32 size, memory_stack& stack); 
-#define                PushInstance(_inst, _stack) \
-												Push(&(_inst), sizeof(_inst), (_stack))
+dll_import void*  			Push(ui32 size, memory_stack& stack);
+dll_import void*			  Push(void* memory, ui32 size, memory_stack& stack); 
+#define                 PushInstance(_inst, _stack) \
+												  Push(&(_inst), sizeof(_inst), (_stack))
 
-dll_import void 				 ResetStack(memory_stack& stack);
+dll_import void 				ResetStack(memory_stack& stack);
 
 #endif
