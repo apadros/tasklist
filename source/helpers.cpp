@@ -25,30 +25,33 @@ void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, 
   // @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
 	// AssertRet(task != Null);
-	AssertRet(dateAdded != Null);
+	// AssertRet(dateAdded != Null);
 	// AssertRet(dateDue != Null);
-	AssertRet(tags!= Null);
+	// AssertRet(tags!= Null);
 	
 	id = "-"; // @TODO - Update once IDs are implemented
 	
-	printf("  ID:         %s\n", id);
+	printf("\n  ID:         %s\n", id);
 	printf("  String:     %s\n", task);
 	printf("  Date added: %s\n", dateAdded);
 	printf("  Date due:   %s\n", dateDue);
 	printf("  Tags:       ");
-	if(tags == Null) // If no tags supplied
+	if(TagIsValid(tags[0]) == false) // If no tags supplied
 		printf("-\n");
 	else { 
 		printf("%s\n", (char*)tags[0]);
 		FromTo(1, MaxTags) {
-			if(tags[it] != Null)
+			if(TagIsValid(tags[it]) == true)
 				printf("              %s\n", (char*)tags[it]);
 		}
 	}
 }
 
 // @TODO - PrintTaskWide() - add support for a batch to to ascertain each colum length
-void PrintTaskWide(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char* reschedulePeriod, const char* flag, const char** groups) {
+void PrintTaskWide(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char** tags) {
+	#if 0
+	AssertRet(task != Null);
+	
 	// @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
 	// AssertRet(task != Null);
@@ -62,7 +65,7 @@ void PrintTaskWide(const char* id, const char* task, const char* dateAdded, cons
 	
 	id = Null; // @TODO - Update once IDs are implemented
 	
-	const char* headers[] = { "ID", "String", "Added", "Due", "Reschedule", "Flag" }; // Groups implemented separately
+	const char* headers[] = { "ID", "String", "Date added", "Date due", "Tags" }; // 
 	const ui8   headersCount = GetArrayLength(headers);
 	const char* contents[] = { id, task, dateAdded, dateDue, reschedulePeriod, flag };
 	ui16        lengths[headersCount] = { };
@@ -136,4 +139,5 @@ void PrintTaskWide(const char* id, const char* task, const char* dateAdded, cons
 			printf(",");
 		printf(" %s", groups[it]);
 	}
+	#endif
 }

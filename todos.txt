@@ -6,6 +6,10 @@ Core commands
 	- Add
 	 - Error message in case of wrong / insufficient args @WIP
 	- List
+		- Add support for 'all' as a specific argument for this command
+			- todos list all
+		- Printing based on arguments as filters @WIP
+		- Printing tasks 'wide'
 		- Testing
 	- Delete
 		- Testing

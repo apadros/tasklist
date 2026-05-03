@@ -12,6 +12,9 @@
 	goto program_exit; \
 }
 
+#define TodoEntriesLoop(_todoList)    ForAll((_todoList).size / sizeof(todoListEntry))
+#define GetTodosEntry(_todoList, _it) (((todoListEntry*)(_todoList).memory) + it)
+
 bool IsValidChar(char c);
 bool TagIsValid(const char* tag);
 void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char** tags);

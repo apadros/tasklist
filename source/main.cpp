@@ -342,8 +342,27 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true) {
-		ForAll(todoList.size / sizeof(todoListEntry)) {
+		TodoEntriesLoop(todoList) {
+			auto* entry = GetTodosEntry(todoList, it);
 			
+			if(taskString != Null) {
+				ConvertStringToLowerCase(taskString);
+				
+				auto entryTaskString = AllocateString(entry->task, Null);
+				ConvertStringToLowerCase(entryTaskString);
+				
+				if(FindSubstring(taskString, entryTaskString) != Null)
+					PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+			}
+			if(dateAdded != Null) {
+				if(FindSubstring(dateAdded, entry->dateAdded) != Null)
+					PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+			}
+			if(dateDue != Null) {
+				if(FindSubstring(dateDue, entry->dateDue) != Null)
+					PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+			}
+			// @TODO - Tags
 		}
 		
 		// @TODO
