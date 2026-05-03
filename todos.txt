@@ -3,6 +3,8 @@ Key
 	@PRIORITY
 	
 Core commands
+	- Add
+	 - Error message in case of wrong / insufficient args @WIP
 	- List
 		- Testing
 	- Delete

@@ -7,4 +7,9 @@ bool IsValidChar(char c);
 bool TagIsValid(const char* tag);
 void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char** tags);
 
+void DisplayTaskStringHelpMessage();
+void DisplayDateAddedHelpMessage();
+void DisplayDateDueHelpMessage();
+void DisplayTagsHelpMessage();
+
 #endif

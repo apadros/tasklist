@@ -21,8 +21,11 @@ const char* ValidArguments[] =   { "-s", "-da", "-dd", "-t" };
 BeginEnum(ValidArgumentsIndex) { TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidArgumentsIndex);
 
 #include <stdio.h>
+##define PrintError(_string) \
+	printf("\nERROR: %s\n", _string)
+	
 #define PrintErrorExit(_string) { \
-	printf("\nERROR: %s\n", _string); \
+	PrintError(_string); \
 	goto program_exit; \
 }
 
@@ -40,14 +43,15 @@ ConsoleAppEntryPoint(args, argsCount) {
 	RegisterExitFunction(ExitFunction); // @TODO - Test this works
 	
 	#ifdef APAD_DEBUG
-		#if 1
+		#if 0
 		char* debugArgs[] = { args[0], "add", "-s", "task x", "-t", "tag1", "tag2", "tag3", "-dd", "05/07" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
 	#endif
 	
-	if(argsCount == 1) {
+	// Initial help message
+	if(argsCount <= 2) {
 		printf("\nUsage: %s [<command>] [<options>]\n", args[0]);
 		printf("\n  Commands\n");
 		printf("      Add\n");
@@ -55,20 +59,22 @@ ConsoleAppEntryPoint(args, argsCount) {
 		
 		// @TODO - Have a custom message for each command and which options can be used with it
 		
+		#if 0
 		printf("\n  Options\n");
 		printf("      %s  [<text string>]                 task text\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		printf("      %s [dd/mm | dd/mm/yyyy]            date added\n", (const char*)ValidArguments[ValidArgumentsIndex::DateAdded]);
 		printf("      %s [dd/mm | dd/mm/yyyy | +ddd[w]]  date due\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
 		printf("      %s  [<tags>...]                     string tags (up to 5)\n", (const char*)ValidArguments[ValidArgumentsIndex::Tags]);
+		#endif
 		
 		goto program_exit;
 	}
 	
 	// Data to be parsed from arguments
 	// Arguments not needed for the required command will be ignored
-	const char* command;
-	const char* taskString;
-	const char* dateAdded;
+	const char* command = Null;
+	const char* taskString = Null;
+	const char* dateAdded = Null;
 	const char* dateDue = Null;
 	const char* tags[MaxTags] = { Null };
 
@@ -258,6 +264,27 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		#endif
 	}	
+	
+	// Check command arguments and possibly display help message
+	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Add]) == true) {
+		bool displayUsage = false;
+		
+		if(taskString == Null) {
+			PrintError("Add command requires at least a task string");
+			displayUsage = true;
+		}
+		
+		if(argsCount == 2) // todos add
+		  displayUsage = true;
+		
+		if(displayUsage == true) {
+			printf("\n Options\n");
+			printf("     %s  [<text string>]                 task text\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+			printf("     %s [dd/mm | dd/mm/yyyy]            date added\n", (const char*)ValidArguments[ValidArgumentsIndex::DateAdded]);
+			printf("     %s [dd/mm | dd/mm/yyyy | +ddd[w]]  date due\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
+			printf("     %s  [<tags>...]                     string tags (up to 5)\n", (const char*)ValidArguments[ValidArgumentsIndex::Tags]);
+		}
+	}
 	
 	#ifdef APAD_DEBUG
 	const char* dataPath = "..\\..\\data\\todos.txt";
