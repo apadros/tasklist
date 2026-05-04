@@ -17,7 +17,7 @@
 
 bool IsValidChar(char c);
 bool TagIsValid(const char* tag);
-void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char** tags);
+void PrintDetailedTask(ui16 id, const char* task, const char* dateAdded, const char* dateDue, const char** tags);
 void DisplayCommandOptions(bool taskString, bool dateAdded, bool dateDue, bool tags);
 
 #endif

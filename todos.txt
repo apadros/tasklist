@@ -2,15 +2,13 @@ Key
 	@WIP
 	@PRIORITY
 	
+Task IDs
+	
 Core commands
 	- Add
 	 - Avoid storing repeated tags - check for duplicates
 	- List @WIP
-		- Add support for 'all' as a specific argument for this command
-			- todos list all
-		- Printing based on arguments as filters @WIP
 		- Printing tasks 'wide'
-		- Testing
 	- Delete
 		- Testing
 	- Reschedule
@@ -21,8 +19,6 @@ Core commands
 		- Testing
 	- Redo
 		- Testing
-	- Help message - same as not supplying args
-	- Custom help message with relevant options for each command
 	
 Testbench / testbenches
 
@@ -38,7 +34,6 @@ Tags
 	- How to add / remove tags from already-present tasks?
 		
 Task file
-	- Saving changes to it
 	- Daily local backup at the start of the day?
 		- Limit to 10 days
 	

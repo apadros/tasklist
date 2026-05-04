@@ -21,7 +21,7 @@ void DisplayCommandOptions(bool taskString, bool dateAdded, bool dateDue, bool t
 		printf("    %s  [<tags>...]                     string tags (up to 5)\n", (const char*)ValidArguments[ValidArgumentsIndex::Tags]);
 }
 
-void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, const char* dateDue, const char** tags) {
+void PrintDetailedTask(ui16 id, const char* task, const char* dateAdded, const char* dateDue, const char** tags) {
   // @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
 	// AssertRet(task != Null);
@@ -29,9 +29,7 @@ void PrintDetailedTask(const char* id, const char* task, const char* dateAdded, 
 	// AssertRet(dateDue != Null);
 	// AssertRet(tags!= Null);
 	
-	id = "-"; // @TODO - Update once IDs are implemented
-	
-	printf("\n  ID:         %s\n", id);
+	printf("\n  ID:         %u\n", id);
 	printf("  String:     %s\n", task);
 	printf("  Date added: %s\n", dateAdded);
 	printf("  Date due:   %s\n", dateDue);

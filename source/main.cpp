@@ -37,7 +37,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	RegisterExitFunction(ExitFunction);
 	
 	#ifdef APAD_DEBUG
-		#if 1
+		#if 0
 		char* debugArgs[] = { args[0], "list", "alltags" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
@@ -274,7 +274,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#endif
 	
 	// Open the todos file and generate task list
+	ui16 guid = 0;
 	struct todoListEntry {
+		ui16  ID;
 		char* task; 		 		 // Must have
 		char* dateAdded; 		 // Must have
 		char* dateDue; 	 		 // Can be Null
@@ -297,6 +299,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			Assert(line.count <= 3 + MaxTags);
 			
 			auto* entry = PushStruct(todoListEntry, todoList);
+			entry->ID = ++guid;
 			entry->task = GetLineDataElement(line, 0);
 			entry->dateAdded = GetLineDataElement(line, 1);
 			entry->dateDue = GetLineDataElement(line, 2);
@@ -316,13 +319,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 		
 		// Create new entry
 		auto* entry = (todoListEntry*)Push(sizeof(todoListEntry), todoList);
+		entry->ID = ++guid;
 		entry->task = (char*)taskString; 
 		entry->dateAdded = (char*)dateAdded;
 		entry->dateDue = (char*)dateDue;
 		Assert(sizeof(tags) == sizeof(entry->tags));
 		CopyMemory(tags, sizeof(tags), entry->tags);
 		printf("\nTask added\n");
-		PrintDetailedTask(Null, taskString, dateAdded, dateDue, tags);
+		PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 		
 		// Save to file
 		auto file = CreateFile();
@@ -352,7 +356,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(specialCommand != Null && StringsAreEqual(specialCommand, "all") == true) { // Print all
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
-				PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+				PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 			}
 		}
 		else if(specialCommand != Null && StringsAreEqual(specialCommand, "alltags") == true) { // Print all tags
@@ -394,15 +398,15 @@ ConsoleAppEntryPoint(args, argsCount) {
 					ConvertStringToLowerCase(entryTaskString);
 					
 					if(FindSubstring(taskString, entryTaskString) != Null)
-						PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 				}
 				if(dateAdded != Null) {
 					if(FindSubstring(dateAdded, entry->dateAdded) != Null)
-						PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 				}
 				if(dateDue != Null) {
 					if(FindSubstring(dateDue, entry->dateDue) != Null)
-						PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 				}
 				
 				ForAll(MaxTags) {
@@ -410,27 +414,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 					if(TagIsValid(tag) == true) {
 						ForAll(MaxTags) {
 							if(TagIsValid(entry->tags[it]) == true && StringsAreEqual(tag, entry->tags[it]) == true)
-								PrintDetailedTask(Null /* @TODO */, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+								PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 						}
 					}
 				}
 			}
 		}
-		
-		// @TODO
-		// By string, ID, flags & tags, - means not
-		// <60 days & >60 days
-		// Automatically list preempt tasks with a date <30 days when listing priority tasks?
-		
-		// @TODO - Parse calendar entries and display
-		// id(8 bit unsigned) task_text(string) date_added(dd/mm/yyyy) date_due_by(dd/mm/yyyy | -) reschedule_data(days | -) flag(! | ? | @) tags(#id1 #id2 ... #id5)
-		
-		// @TODO - search / list filters - view only task, id, all tasks from #group, etc
-		// 			 	- E.g. view only the tags of tasks due by x date
-		
-		// @TODO - Specify which info columns are wanted - -da (date added) -dd (date due) etc ?
-		
-		// Scan through remaining arguments
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) { // Modify - @TODO
 		// @TODO
