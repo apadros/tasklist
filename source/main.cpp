@@ -14,12 +14,13 @@
 #include "helpers.h"
 
 const ui8 MaxTags = 5;
+typedef ui16 guid;
 
 const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
 BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
 
-const char* ValidArguments[] =   { "-s", "-da", "-dd", "-t" };
-BeginEnum(ValidArgumentsIndex) { TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidArgumentsIndex);
+const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t" };
+BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidArgumentsIndex);
 
 #include "helpers.cpp"
 
@@ -56,6 +57,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	// Data to be parsed from arguments
 	// Arguments not needed for the required command will be ignored
 	const char* command = Null;
+	const char* id = Null;
 	const char* taskString = Null;
 	const char* dateAdded = Null;
 	const char* dateDue = Null;
@@ -87,6 +89,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && (StringsAreEqual(arg, "all") == true || StringsAreEqual(arg, "alltags") == true)) {
 			specialCommand = arg;
 			break;
+		}
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::ID]) == true) {
+			it += 1;
+			CheckArgsExit();
+			id = args[it];
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::TaskString]) == true) {
 			it += 1;
@@ -256,12 +263,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 	// Check command arguments and possibly display help message
 	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Add]) == true && taskString == Null) {
 		printf("\nUsage: %s %s -s [task string] [<options>]\n", args[0], command);
-		DisplayCommandOptions(false, false, true, true);
+		DisplayCommandOptions(false, false, false, true, true);
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount == 2 && specialCommand == Null) {
 		printf("\nUsage: %s %s [<options>]\n", args[0], command);
-		DisplayCommandOptions(true, true, true, true);
+		DisplayCommandOptions(true, true, true, true, true);
 		printf("    all                                 list all\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		printf("    alltags                             list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		goto program_exit;
@@ -274,9 +281,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#endif
 	
 	// Open the todos file and generate task list
-	ui16 guid = 0;
+	guid guidCounter = 0;
 	struct todoListEntry {
-		ui16  ID;
+		guid  ID;
 		char* task; 		 		 // Must have
 		char* dateAdded; 		 // Must have
 		char* dateDue; 	 		 // Can be Null
@@ -299,7 +306,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			Assert(line.count <= 3 + MaxTags);
 			
 			auto* entry = PushStruct(todoListEntry, todoList);
-			entry->ID = ++guid;
+			entry->ID = ++guidCounter;
 			entry->task = GetLineDataElement(line, 0);
 			entry->dateAdded = GetLineDataElement(line, 1);
 			entry->dateDue = GetLineDataElement(line, 2);
@@ -319,7 +326,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		
 		// Create new entry
 		auto* entry = (todoListEntry*)Push(sizeof(todoListEntry), todoList);
-		entry->ID = ++guid;
+		entry->ID = ++guidCounter;
 		entry->task = (char*)taskString; 
 		entry->dateAdded = (char*)dateAdded;
 		entry->dateDue = (char*)dateDue;
@@ -388,33 +395,53 @@ ConsoleAppEntryPoint(args, argsCount) {
 			FreeStack(printedTags);
 		}
 		else {		
+			guid IDasInt = 0;
+			if(id != Null)
+				IDasInt = StringToInt(id, Null);
+			
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
+				bool printed = false;
 				
-				if(taskString != Null) {
+				if(id != Null && IDasInt == entry->ID) {
+					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+					printed = true;
+				}
+				
+				if(printed == false && taskString != Null) {
 					ConvertStringToLowerCase(taskString);
 					
 					auto entryTaskString = AllocateString(entry->task, Null);
 					ConvertStringToLowerCase(entryTaskString);
 					
-					if(FindSubstring(taskString, entryTaskString) != Null)
+					if(FindSubstring(taskString, entryTaskString) != Null) {
 						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
-				}
-				if(dateAdded != Null) {
-					if(FindSubstring(dateAdded, entry->dateAdded) != Null)
-						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
-				}
-				if(dateDue != Null) {
-					if(FindSubstring(dateDue, entry->dateDue) != Null)
-						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+						printed = true;
+					}
 				}
 				
-				ForAll(MaxTags) {
-					const char* tag = tags[it];
-					if(TagIsValid(tag) == true) {
-						ForAll(MaxTags) {
-							if(TagIsValid(entry->tags[it]) == true && StringsAreEqual(tag, entry->tags[it]) == true)
-								PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+				if(printed == false && dateAdded != Null) {
+					if(FindSubstring(dateAdded, entry->dateAdded) != Null) {
+						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+						printed = true;
+					}
+				}
+				
+				if(printed == false && dateDue != Null) {
+					if(FindSubstring(dateDue, entry->dateDue) != Null) {
+						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+						printed = true;
+					}
+				}
+				
+				if(printed == false) { 
+					ForAll(MaxTags) {
+						const char* tag = tags[it];
+						if(TagIsValid(tag) == true) {
+							ForAll(MaxTags) {
+								if(TagIsValid(entry->tags[it]) == true && StringsAreEqual(tag, entry->tags[it]) == true)
+									PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+							}
 						}
 					}
 				}

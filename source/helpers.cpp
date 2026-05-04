@@ -9,8 +9,10 @@ bool TagIsValid(const char* tag) {
 	return tag != Null;
 }
 
-void DisplayCommandOptions(bool taskString, bool dateAdded, bool dateDue, bool tags) {
+void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags) {
 	printf("\n  Options\n");
+	if(id == true)
+		printf("    %s  [id]                            task text\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 	if(taskString == true)
 		printf("    %s  [<text string>]                 task text\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 	if(dateAdded == true)
