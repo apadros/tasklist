@@ -11,7 +11,10 @@ Core commands
 		- Testing
 	- Reschedule
 		- Testing
-	- Modify
+	- Modify @WIP
+		- How to add / remove tags from already-present tasks?
+			- Might need special switches - e.g. todos mod -id x -t1 (specify tag 1) " tag "
+				- -t means tags in general, tx means xth tag
 		- Testing
 	- Undo
 		- Testing
@@ -29,7 +32,7 @@ Dates
 	- Checking whether it actually exists. E.g. 30th February
 		
 Tags
-	- How to add / remove tags from already-present tasks?
+	
 		
 Task file
 	- Daily local backup at the start of the day?

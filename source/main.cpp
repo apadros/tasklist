@@ -13,9 +13,6 @@
 
 #include "helpers.h"
 
-const ui8 MaxTags = 5;
-typedef ui16 guid;
-
 const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
 BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
 
@@ -266,11 +263,16 @@ ConsoleAppEntryPoint(args, argsCount) {
 		DisplayCommandOptions(false, false, false, true, true);
 		goto program_exit;
 	}
-	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount == 2 && specialCommand == Null) {
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount < 4 && specialCommand == Null) {
 		printf("\nUsage: %s %s [<options>]\n", args[0], command);
 		DisplayCommandOptions(true, true, true, true, true);
 		printf("    all                                 list all\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		printf("    alltags                             list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		goto program_exit;
+	}
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true && (id == Null || argsCount < 6)) {
+		printf("\nUsage: %s %s -id [id] [<options>]\n", args[0], command);
+		DisplayCommandOptions(false, true, false, true, true);
 		goto program_exit;
 	}
 	
@@ -282,13 +284,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Open the todos file and generate task list
 	guid guidCounter = 0;
-	struct todoListEntry {
-		guid  ID;
-		char* task; 		 		 // Must have
-		char* dateAdded; 		 // Must have
-		char* dateDue; 	 		 // Can be Null
-		char* tags[MaxTags]; // Can all be Null
-	};
+	
 	memory_stack todoList = AllocateStack();
 	{
 		if(FileExists(dataPath) == false)
@@ -335,27 +331,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		printf("\nTask added\n");
 		PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 		
-		// Save to file
-		auto file = CreateFile();
-		ForAll(todoList.size / sizeof(todoListEntry)) {
-			auto* entry = (todoListEntry*)todoList.memory + it;	
-			Assert(entry->task != Null);
-			Assert(entry->dateAdded != Null);
-			
-			char* string = Concatenate(7, "\"", entry->task, "\" ", entry->dateAdded, " ", entry->dateDue == Null ? "-" : entry->dateDue, " ");
-			WriteToFile(string, file);
-			if(TagIsValid(entry->tags[0]) == false)
-				WriteToFile("- ", file);
-			else {
-				ForAll(MaxTags) {
-					if(TagIsValid(entry->tags[it]) == true)
-						WriteToFile(Concatenate(3, "\"", entry->tags[it], "\" "), file);
-				}
-			}
-			WriteToFile("\r\n", file); 
-		}
-		SaveFile(file.memory, file.size, dataPath);
-		FreeFile(file);
+		SaveChangesToTodosFile(todoList, dataPath);
 		
 		goto program_exit;
 	}
@@ -448,13 +424,35 @@ ConsoleAppEntryPoint(args, argsCount) {
 			}
 		}
 	}
-	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) { // Modify - @TODO
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) {
 		// @TODO
-		// Print the details which have been updated, followed by the entire task data
-		// - E.g. Task ID / flag / group updated
-		// - Keep it simple
 		// When making any changes to an entry, display the updated portion of info 
 		// before and after, then display the updated entry will all info
+		
+		Assert(id != Null);
+		guid ID = StringToInt(id, Null);
+		bool modded = false;
+		TodoEntriesLoop(todoList) {
+			auto* entry = GetTodosEntry(todoList, it);
+			if(entry->ID == ID) {
+				if(taskString != Null) {
+					entry->task = (char*)taskString;
+					printf("\nUpdated task text\n");
+					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
+					modded = true;
+				}
+				
+				// @WIP
+				//  - How to add / remove tags from already-present tasks?
+				//    - Might need special switches - e.g. todos mod -id x -t1 (specify tag 1) " tag "
+				//      - -t means tags in general, tx means xth tag
+				
+				break;
+			}
+		}
+		
+		if(modded == true)
+			SaveChangesToTodosFile(todoList, dataPath);		
 	}
 	else {
 		PrintErrorExit("Invalid command supplied.");
