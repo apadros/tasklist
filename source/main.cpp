@@ -87,6 +87,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 			specialCommand = arg;
 			break;
 		}
+		else if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
+			PreventCompilation; // Create IsNumber(char* string) in API and bring it here
+			specialCommand = arg;
+			break;
+		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::ID]) == true) {
 			it += 1;
 			CheckArgsExit();
@@ -300,7 +305,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true && id == Null) {
-		printf("\nUsage: %s %s -id [id]\n", args[0], command);
+		printf("\nUsage: %s %s [id]\n", args[0], command);
 		goto program_exit;
 	}
 	
