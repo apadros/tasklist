@@ -20,7 +20,7 @@ void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDu
 	if(dateDue == true)
 		printf("    %s [dd/mm | dd/mm/yyyy | +ddd[w]]  date due\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
 	if(tags == true)
-		printf("    %s  [<tags>...]                     string tags (up to 5)\n", (const char*)ValidArguments[ValidArgumentsIndex::Tags]);
+		printf("    [[%s <tags>] | [%s<1-5>]]           string tags (up to 5) or %s(number 1 to 5) to set a specific tag\n", (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric]);
 }
 
 #include "apad_file.h"
@@ -34,14 +34,17 @@ void SaveChangesToTodosFile(memory_stack& todoList, const char* dataPath) {
 		
 		char* string = Concatenate(7, "\"", entry->task, "\" ", entry->dateAdded, " ", entry->dateDue == Null ? "-" : entry->dateDue, " ");
 		WriteToFile(string, file);
-		if(TagIsValid(entry->tags[0]) == false)
-			WriteToFile("- ", file);
-		else {
-			ForAll(MaxTags) {
-				if(TagIsValid(entry->tags[it]) == true)
-					WriteToFile(Concatenate(3, "\"", entry->tags[it], "\" "), file);
+		
+		bool tagsFound = false;
+		ForAll(MaxTags) {
+			if(TagIsValid(entry->tags[it]) == true) {
+				WriteToFile(Concatenate(3, "\"", entry->tags[it], "\" "), file);
+				tagsFound = true;
 			}
 		}
+		if(tagsFound == false)
+			WriteToFile("- ", file);
+		
 		WriteToFile("\r\n", file); 
 	}
 	SaveFile(file.memory, file.size, dataPath);

@@ -16,8 +16,8 @@
 const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
 BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
 
-const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t" };
-BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, Tags, Length } EndEnum(ValidArgumentsIndex);
+const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t", "-t1", "-t2", "-t3", "-t4", "-t5" };
+BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, TagsGeneric, Tag1, Tag2, Tag3, Tag4, Tag5, Length } EndEnum(ValidArgumentsIndex);
 
 #include "helpers.cpp"
 
@@ -36,7 +36,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "list", "alltags" };
+		char* debugArgs[] = { args[0], "add", "-s", "task added today", "-t3", "tag 3" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
@@ -115,7 +115,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			// Convert to long date format
 			dateDue = DateToString(StringToDate(dateDue)); // @TODO - Simplify this?
 		}
-		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tags]) == true) {
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::TagsGeneric]) == true) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
 			ui8 count = 0;
 			while(count < MaxTags) {
@@ -137,9 +137,33 @@ ConsoleAppEntryPoint(args, argsCount) {
 				}
 			}
 		}
-		else {
-			PrintErrorExit("Invalid command option"); // @TODO - Go to specific help message
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tag1]) == true) {
+			it += 1;
+			CheckArgsExit();
+			tags[0] = args[it];
 		}
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tag2]) == true) {
+			it += 1;
+			CheckArgsExit();
+			tags[1] = args[it];
+		}
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tag3]) == true) {
+			it += 1;
+			CheckArgsExit();
+			tags[2] = args[it];
+		}
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tag4]) == true) {
+			it += 1;
+			CheckArgsExit();
+			tags[3] = args[it];
+		}
+		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::Tag5]) == true) {
+			it += 1;
+			CheckArgsExit();
+			tags[4] = args[it];
+		}
+		else
+			PrintErrorExit("Invalid argument supplied");
 		
 		#if 0
 		else if(IsDate(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
@@ -371,15 +395,15 @@ ConsoleAppEntryPoint(args, argsCount) {
 			FreeStack(printedTags);
 		}
 		else {		
-			guid IDasInt = 0;
+			guid ID = 0;
 			if(id != Null)
-				IDasInt = StringToInt(id, Null);
+				ID = StringToInt(id, Null);
 			
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
 				bool printed = false;
 				
-				if(id != Null && IDasInt == entry->ID) {
+				if(id != Null && ID == entry->ID) {
 					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (const char**)entry->tags);
 					printed = true;
 				}
