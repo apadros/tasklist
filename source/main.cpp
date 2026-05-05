@@ -36,7 +36,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "add", "-s", "task added today", "-t3", "tag 3" };
+		char* debugArgs[] = { args[0], "mod", "-id", "8", "-t1", "" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
@@ -290,8 +290,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount < 4 && specialCommand == Null) {
 		printf("\nUsage: %s %s [<options>]\n", args[0], command);
 		DisplayCommandOptions(true, true, true, true, true);
-		printf("    all                                 list all\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
-		printf("    alltags                             list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    all                                          list all todos\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    alltags                                      list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true && (id == Null || argsCount < 6)) {
@@ -475,8 +475,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 				
 				if(AnyTagsPresent((char**)tags) == true) {
 					ForAll(MaxTags) {
-						if(TagIsValid(tags[it]) == true)
-							entry->tags[it] = (char*)tags[it];
+						if(TagIsValid(tags[it]) == true) {
+							if(StringsAreEqual(tags[it], "") == true)
+								entry->tags[it] = Null;
+							else
+								entry->tags[it] = (char*)tags[it];
+						}
 					}
 					printf("\nUpdated tags\n");
 					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);

@@ -3,7 +3,9 @@
 if not exist build ( mkdir build )
 cd build
 
+move rebuild_debug.bat ..
 del * /q
+move ..\rebuild_debug.bat .
 
 copy ..\..\apad_api_lib64\*debug.* .
 

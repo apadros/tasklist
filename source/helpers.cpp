@@ -21,15 +21,15 @@ bool AnyTagsPresent(char** tags) {
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags) {
 	printf("\n  Options\n");
 	if(id == true)
-		printf("    %s  [id]                            ID\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    %s  [id]                                     ID\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 	if(taskString == true)
-		printf("    %s  [<text string>]                 task text\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    %s  [<text string>]                          task text\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 	if(dateAdded == true)
-		printf("    %s [dd/mm | dd/mm/yyyy]            date added\n", (const char*)ValidArguments[ValidArgumentsIndex::DateAdded]);
+		printf("    %s [dd/mm | dd/mm/yyyy]                     date added\n", (const char*)ValidArguments[ValidArgumentsIndex::DateAdded]);
 	if(dateDue == true)
-		printf("    %s [dd/mm | dd/mm/yyyy | +ddd[w]]  date due\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
+		printf("    %s [dd/mm | dd/mm/yyyy | +ddd[w]]           date due\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
 	if(tags == true)
-		printf("    [[%s <tags>] | [%s<1-5>]]           string tags (up to 5) or %s(number 1 to 5) to set a specific tag\n", (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric]);
+		printf("    [[%s [<tags> | \"\"]] | [%s<1-5> [tag | \"\"]]]  string tags (up to 5) or %s(number 1 to 5) to set a specific tag or \"\" to remove a tag\n", (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric]);
 }
 
 #include "apad_file.h"
