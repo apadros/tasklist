@@ -36,7 +36,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "del", "-id", "6" };
+		char* debugArgs[] = { args[0], "add", "-s", "task99", "-t", "tag 1", "tag0", "tag 1", "tag", "tag0" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
@@ -358,7 +358,17 @@ ConsoleAppEntryPoint(args, argsCount) {
 		entry->task = (char*)taskString; 
 		entry->dateAdded = (char*)dateAdded;
 		entry->dateDue = (char*)dateDue;
+		
 		Assert(sizeof(tags) == sizeof(entry->tags));
+		FromTo(0, MaxTags - 1) {
+			auto current = it;
+			if(TagIsValid(tags[current]) == true) {
+				FromTo(current + 1, MaxTags) {
+					if(TagIsValid(tags[it]) && StringsAreEqual(tags[current], tags[it]) == true)
+						tags[it] = Null;
+				}
+			}
+		}
 		CopyMemory(tags, sizeof(tags), entry->tags);
 		printf("\nTask added\n");
 		PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
