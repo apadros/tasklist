@@ -373,7 +373,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		printf("\nTask added\n");
 		PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
 		
-		SaveChangesToTodosFile(todoList, dataPath);
+		SaveTodosFile(todoList, dataPath);
 		
 		goto program_exit;
 	}
@@ -467,10 +467,6 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) {
-		// @TODO
-		// When making any changes to an entry, display the updated portion of info 
-		// before and after, then display the updated entry will all info
-		
 		Assert(id != Null);
 		guid ID = StringToInt(id, Null);
 		bool modded = false;
@@ -510,7 +506,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		
 		if(modded == true)
-			SaveChangesToTodosFile(todoList, dataPath);		
+			SaveTodosFile(todoList, dataPath);		
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
 		Assert(id != Null);
@@ -528,11 +524,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 				todoList.size -= sizeof(todoListEntry);
 				
 				printf("\nTodo no. %u deleted\n", ID);
-				SaveChangesToTodosFile(todoList, dataPath);
+				SaveTodosFile(todoList, dataPath);
 				
 				break;
 			}
 		}		
+	}
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Undo]) == true) {
+		// @TODO - Store a copy of the file with each save, restore when running this command
+		// @WIP - Need to test this
+		
+		char* newPath = AllocateString(path, Null);
+		*(GetFileExtension(newPath) - 1) = '\0'; // Remove the . and extension
+		newPath = Concatenate(2, newPath, "_backup.", GetFileExtension(path)); // Append "_backup.extension"
+		
+		SaveTodosFile(todoList, newPath);
 	}
 	else
 		PrintErrorExit("Invalid command supplied.");

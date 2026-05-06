@@ -34,7 +34,7 @@ void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDu
 
 #include "apad_file.h"
 #include "apad_string.h"
-void SaveChangesToTodosFile(memory_stack& todoList, const char* dataPath) {
+void SaveTodosFile(memory_stack& todoList, const char* dataPath) {
 	auto file = CreateFile();
 	TodoEntriesLoop(todoList) {
 		auto* entry = GetTodosEntry(todoList, it);

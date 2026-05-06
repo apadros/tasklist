@@ -31,6 +31,6 @@ bool AnyTagsPresent(char** tags);
 bool TagIsValid(const char* tag);
 void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags);
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags);
-void SaveChangesToTodosFile(memory_stack& todoList, const char* dataPath);
+void SaveTodosFile(memory_stack& todoList, const char* dataPath);
 
 #endif

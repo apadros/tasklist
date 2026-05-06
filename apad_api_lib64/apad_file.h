@@ -19,7 +19,8 @@ dll_import     void 			  SaveFile(void* data, ui32 dataSize, const char* path); 
 dll_import     void         SaveFile(file& f, const char* path);
 program_unique void 			(*FreeFile)(file& f) = FreeMemory;
 dll_import 		 bool   			IsValid(file f); // Defined in apad_memory.cpp
-dll_import 		 const char*  GetFileNameAndExtension(const char* path);
+dll_import 		 const char*  GetFileNameAndExtension(const char* path); // Does not allocate a new string
+dll_import 		 const char*  GetFileExtension(const char* path); // Does not allocate a new string
 
 // ******************** Reading ******************** //
 

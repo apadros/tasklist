@@ -2,13 +2,16 @@ Key
 	@WIP
 	@PRIORITY
 	
+Misc
+	- Various @TODO in code files
+	
 Core commands
 	- List
 		- Printing tasks 'wide'
-	- Undo
-		- Testing
-	- Redo
-		- Testing
+	- Modify
+		- When making any changes to an entry, display the updated portion of info before and after?
+	- Undo @WIP
+	- Redo?
 	
 Testbench / testbenches
 
