@@ -87,9 +87,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 			specialCommand = arg;
 			break;
 		}
-		else if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
-			PreventCompilation; // Create IsNumber(char* string) in API and bring it here
-			specialCommand = arg;
+		else if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true && IsNumber((char*)arg) == true) { // Skip the -id when deleting a todo
+			id = arg;
 			break;
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::ID]) == true) {

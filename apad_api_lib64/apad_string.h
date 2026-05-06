@@ -28,7 +28,9 @@ dll_import si32  StringToInt(const char* s, ui16 length /* Set to Null to conver
 // ******************** Others ******************** //
 
 dll_import bool IsLetter(char c);
+dll_import bool IsWord(char* string);
 dll_import bool IsNumber(char c);
+dll_import bool IsNumber(char* string);
 
 dll_import bool IsWhitespace(char c); // Space, horizontal & vertical tabs, carriage return, newline & feed
 
