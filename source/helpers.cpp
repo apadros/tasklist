@@ -18,6 +18,13 @@ bool AnyTagsPresent(char** tags) {
 	return false;
 }
 
+char* GetBackupTodosFilePath(const char* filePath) {
+	AssertRetType(filePath != Null, Null);
+	char* backupPath = AllocateString(filePath, Null);
+	*((char*)(GetFileExtension(backupPath) - 1)) = '\0'; // Remove the . and extension
+	return Concatenate(3, backupPath, "_backup.", GetFileExtension(filePath)); // Append "_backup.extension"
+}
+
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags) {
 	printf("\n  Options\n");
 	if(id == true)
@@ -34,7 +41,10 @@ void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDu
 
 #include "apad_file.h"
 #include "apad_string.h"
+// Any changes to this function must be reflected in SaveTodosFileBackup()
 void SaveTodosFile(memory_stack& todoList, const char* dataPath) {
+	AssertRet(dataPath != Null);
+	
 	auto file = CreateFile();
 	TodoEntriesLoop(todoList) {
 		auto* entry = GetTodosEntry(todoList, it);
@@ -56,8 +66,40 @@ void SaveTodosFile(memory_stack& todoList, const char* dataPath) {
 
 		WriteToFile("\r\n", file);
 	}
+	
 	SaveFile(file.memory, file.size, dataPath);
+	
 	FreeFile(file);
+}
+
+// Any changes to this function must be reflected in SaveTodosFile()
+void SaveTodosFileBackup(memory_stack& todoList, const char* dataPath) {
+	AssertRet(dataPath);
+	
+	auto file = CreateFile();
+	TodoEntriesLoop(todoList) {
+		auto* entry = GetTodosEntry(todoList, it);
+		Assert(entry->task != Null);
+		Assert(entry->dateAdded != Null);
+
+		char* string = Concatenate(7, "\"", entry->task, "\" ", entry->dateAdded, " ", entry->dateDue == Null ? "-" : entry->dateDue, " ");
+		WriteToFile(string, file);
+
+		bool tagsFound = false;
+		ForAll(MaxTags) {
+			if(TagIsValid(entry->tags[it]) == true) {
+				WriteToFile(Concatenate(3, "\"", entry->tags[it], "\" "), file);
+				tagsFound = true;
+			}
+		}
+		if(tagsFound == false)
+			WriteToFile("- ", file);
+
+		WriteToFile("\r\n", file);
+	}
+	
+	char* backupPath = GetBackupTodosFilePath(dataPath);
+	SaveFile(file.memory, file.size, backupPath);
 }
 
 void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags) {

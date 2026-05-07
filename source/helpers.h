@@ -29,8 +29,13 @@ struct todoListEntry {
 bool IsValidChar(char c);
 bool AnyTagsPresent(char** tags);
 bool TagIsValid(const char* tag);
+
 void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags);
+
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags);
-void SaveTodosFile(memory_stack& todoList, const char* dataPath);
+
+char* GetBackupTodosFilePath(const char* filePath);
+void  SaveTodosFile(memory_stack& todoList, const char* dataPath);
+void  SaveTodosFileBackup(memory_stack& todoList, const char* dataPath);
 
 #endif

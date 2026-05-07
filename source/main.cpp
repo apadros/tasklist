@@ -46,8 +46,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 	if(argsCount == 1) {
 		printf("\nUsage: %s [<command>] [<options>]\n", args[0]);
 		printf("\n  Commands\n");
-		printf("      Add\n");
-		printf("      List\n");
+		printf("      add\n");
+		printf("      list\n");
+		printf("      del   deletes entire task\n");
+		printf("      mod   modifies task, including deletion of data\n");
+		printf("      undo  undoes latest change only (restores todos file with a backup)\n");
 		goto program_exit;
 	}
 	
@@ -309,7 +312,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	}
 	
 	#ifdef APAD_DEBUG
-	const char* dataPath = "..\\..\\data\\todos.txt";
+	const char* dataPath = "../../data/todos.txt";
 	#else
 	const char* dataPath = "data/todos.txt";
 	#endif
@@ -350,6 +353,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Parse command, output error message if invalid
 	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Add]) == true) {
+		SaveTodosFileBackup(todoList, dataPath);
+		
 		dateAdded = DateToString(GetDate(0));
 		
 		// Create new entry
@@ -467,6 +472,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) {
+		SaveTodosFileBackup(todoList, dataPath);
+		
 		Assert(id != Null);
 		guid ID = StringToInt(id, Null);
 		bool modded = false;
@@ -509,6 +516,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 			SaveTodosFile(todoList, dataPath);		
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
+		SaveTodosFileBackup(todoList, dataPath);
+		
 		Assert(id != Null);
 		guid ID = StringToInt(id, Null);
 		TodoEntriesLoop(todoList) {
@@ -531,14 +540,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}		
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Undo]) == true) {
-		// @TODO - Store a copy of the file with each save, restore when running this command
-		// @WIP - Need to test this
-		
-		char* newPath = AllocateString(path, Null);
-		*(GetFileExtension(newPath) - 1) = '\0'; // Remove the . and extension
-		newPath = Concatenate(2, newPath, "_backup.", GetFileExtension(path)); // Append "_backup.extension"
-		
-		SaveTodosFile(todoList, newPath);
+		char* backupPath = GetBackupTodosFilePath(dataPath);
+		Assert(FileExists(backupPath) == true);
+		auto backupFile = LoadFile(backupPath);
+		Assert(IsValid(backupFile) == true);
+		SaveFile(backupFile.memory, backupFile.size, dataPath);
+		printf("\nTodos file replaced with backup\n", GetBackupTodosFilePath(dataPath));
 	}
 	else
 		PrintErrorExit("Invalid command supplied.");
