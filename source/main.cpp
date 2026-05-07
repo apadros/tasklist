@@ -13,8 +13,8 @@
 
 #include "helpers.h"
 
-const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo", "redo" };
-BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Redo, Length } EndEnum(ValidCommandsIndex);
+const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo" };
+BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Length } EndEnum(ValidCommandsIndex);
 
 const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t", "-t1", "-t2", "-t3", "-t4", "-t5" };
 BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, TagsGeneric, Tag1, Tag2, Tag3, Tag4, Tag5, Length } EndEnum(ValidArgumentsIndex);
@@ -62,7 +62,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	const char* dateAdded = Null;
 	const char* dateDue = Null;
 	const char* tags[MaxTags] = { Null };
-	const char* specialCommand = Null;
+	const char* specialOption = Null;
 
 	// Parse and check command
 	command = args[1];
@@ -87,7 +87,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		const char* arg = args[it];
 		
 		if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && (StringsAreEqual(arg, "all") == true || StringsAreEqual(arg, "alltags") == true)) {
-			specialCommand = arg;
+			specialOption = arg;
 			break;
 		}
 		else if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true && IsNumber((char*)arg) == true) { // Skip the -id when deleting a todo
@@ -171,8 +171,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		else
 			PrintErrorExit("Invalid argument supplied");
-		
-		#if 0
+		#if 0 // @TODO - Decide what to do with all of this
 		else if(IsDate(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
       if(arg[0] == '.') {
 				if(dateDue.length == 0)
@@ -243,48 +242,6 @@ ConsoleAppEntryPoint(args, argsCount) {
 				}
 			}
 		}
-		else if(arg.length == 1) { // Flag
-			if(arg[0] == '!' || arg[0] == '?' || arg[0] == '@')
-				flag = arg;
-			else {
-				PrintErrorExit("Invalid flag supplied: %s", (char*)arg);
-				goto program_exit;
-			}
-		}
-		else if(StringsAreEqual(arg, "-t") == true) { // Tags
-			it += 1;
-			
-			if(it == argsCount) {
-				PrintErrorExit("No tags specified");
-				goto program_exit;
-			}
-			
-			// Everything following this switch is considered to be a tag
-			do {
-				arg = args[it];
-				
-				bool added = false;
-				ForAll(MaxTags) {
-					if(tags[it].length == 0) {
-						tags[it] = arg;
-						added = true;
-						break;
-					}
-				}
-				
-				if(added == false) {
-					PrintErrorExit("Number of tags exceeded, max 5");
-					goto program_exit;
-				}
-				
-				it += 1;
-			}
-			while(it < argsCount);
-		}
-		else { // Invalid argument
-			PrintErrorExit("Invalid argument: %s", (char*)arg);
-			goto program_exit;
-		}
 		#endif
 	}	
 	
@@ -294,7 +251,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		DisplayCommandOptions(false, false, false, true, true);
 		goto program_exit;
 	}
-	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount < 4 && specialCommand == Null) {
+	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount < 4 && specialOption == Null) {
 		printf("\nUsage: %s %s [<options>]\n", args[0], command);
 		DisplayCommandOptions(true, true, true, true, true);
 		printf("    all                                          list all todos\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
@@ -383,13 +340,13 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true) {
-		if(specialCommand != Null && StringsAreEqual(specialCommand, "all") == true) { // Print all
+		if(specialOption != Null && StringsAreEqual(specialOption, "all") == true) { // Print all
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
 				PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
 			}
 		}
-		else if(specialCommand != Null && StringsAreEqual(specialCommand, "alltags") == true) { // Print all tags
+		else if(specialOption != Null && StringsAreEqual(specialOption, "alltags") == true) { // Print all tags
 			auto printedTags = AllocateStack();
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
@@ -475,23 +432,24 @@ ConsoleAppEntryPoint(args, argsCount) {
 		SaveTodosFileBackup(todoList, dataPath);
 		
 		Assert(id != Null);
-		guid ID = StringToInt(id, Null);
-		bool modded = false;
+		guid 					 ID = StringToInt(id, Null);
+		todoListEntry* moddedEntry = Null;
+		char* 				 previousString = Null;
+		si8 					 modsCount = 0;
 		TodoEntriesLoop(todoList) {
 			auto* entry = GetTodosEntry(todoList, it);
 			if(entry->ID == ID) {
+				moddedEntry = entry;
+				
 				if(taskString != Null) {
+					previousString = AllocateString(entry->task, Null);
 					entry->task = (char*)taskString;
-					printf("\nUpdated task text\n");
-					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-					modded = true;
+					modsCount += 1;
 				}
 				
 				if(dateDue != Null) {
 					entry->dateDue = (char*)dateDue;
-					printf("\nUpdated date due\n");
-					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-					modded = true;
+					modsCount += 1;
 				}
 				
 				if(AnyTagsPresent((char**)tags) == true) {
@@ -503,17 +461,40 @@ ConsoleAppEntryPoint(args, argsCount) {
 								entry->tags[it] = (char*)tags[it];
 						}
 					}
-					printf("\nUpdated tags\n");
-					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-					modded = true;
+					modsCount += 1;
 				}
 				
 				break;
 			}
 		}
 		
-		if(modded == true)
+		if(modsCount > 0) {
+			Assert(moddedEntry != Null);
+			
+			printf("\nTask \"%s\" modified, updated ", taskString == Null ? moddedEntry->task : previousString);
+			
+			if(taskString != Null) {
+				printf("task text");
+				modsCount -= 1;
+				if(modsCount > 0)
+					printf(" & ");
+			}
+			
+			if(dateDue != Null) {
+				printf("date due");
+				modsCount -= 1;
+				if(modsCount > 0)
+					printf(" & ");
+			}
+			
+			if(AnyTagsPresent((char**)tags) == true)
+				printf("tags");
+			
+			printf("\n");
+			
+			PrintDetailedTask(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
 			SaveTodosFile(todoList, dataPath);		
+		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
 		SaveTodosFileBackup(todoList, dataPath);
@@ -523,6 +504,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 		TodoEntriesLoop(todoList) {
 			auto* entry = GetTodosEntry(todoList, it);
 			if(entry->ID == ID) {
+				char* taskString = AllocateString(entry->task, Null);
+				
 				ClearMemory(entry, sizeof(todoListEntry));
 				void* dataStart = entry + 1;
 				void* dataEnd = (ui8*)todoList.memory + todoList.size;
@@ -532,7 +515,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				}
 				todoList.size -= sizeof(todoListEntry);
 				
-				printf("\nTodo no. %u deleted\n", ID);
+				printf("\nTodo \"%s\" deleted\n", taskString);
 				SaveTodosFile(todoList, dataPath);
 				
 				break;

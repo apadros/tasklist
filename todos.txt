@@ -10,22 +10,16 @@ Core commands
 		- Printing tasks 'wide'
 	- Modify
 		- When making any changes to an entry, display the updated portion of info before and after?
-	- Redo?
 	
 Testbench / testbenches
 
 Dates
-	- <=[date] less than or equal to [date]
-		- Same for <, >, >= etc
-		- Requires logic when filtering for dates
-	- . shorthand for today
-		- Could do <=., >=., etc
+	- "today" as short hand for current date
+	- [date]+/x - x days before / after [date] as a date argument
+	- </<=/>/>=[date] as date argument
 	- Checking whether it actually exists. E.g. 30th February
-		
-Tags
-	
-		
-Task file
+			
+Todos file
 	- Daily local backup at the start of the day?
 		- Limit to 10 days
 	
