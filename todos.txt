@@ -7,12 +7,12 @@ Misc
 	
 Core commands
 	- List
+		- Sorting! Need special arguments
 		- Printing tasks 'wide'
 	
 Testbench / testbenches
 
 Dates
-	- "today" as short hand for current date @WIP
 	- </<=/>/>=[date] as date argument
 	- Checking whether it actually exists. E.g. 30th February
 			
