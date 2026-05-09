@@ -36,7 +36,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "add", "-s", "task99", "-t", "tag 1", "tag0", "tag 1", "tag", "tag0" };
+		char* debugArgs[] = { args[0], "todos", "list", "-da", "04/05+2" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);	
 		#endif
@@ -107,8 +107,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::DateAdded]) == true) {
 			it += 1;
 			CheckArgsExit();
-			dateAdded = args[it];
-			if(IsDate(dateAdded) == false)
+			dateAdded = DateToString(StringToDate(args[it])); // Do this to take into account any modifiers to the date (e.g. logic or offsets)
+			if(IsDateAndValid(dateAdded) == false)
 				PrintErrorExit("Invalid date added specified");
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::DateDue]) == true) {
@@ -116,11 +116,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 			CheckArgsExit();
 			dateDue = args[it];
 			
-			if(IsDate(dateDue) == false)
+			if(IsDateAndValid(dateDue) == false)
 				PrintErrorExit("Invalid date due specified");
 			
 			// Convert to long date format
-			dateDue = DateToString(StringToDate(dateDue)); // @TODO - Simplify this?
+			dateDue = DateToString(StringToDate(dateDue)); // Do this to take into account any modifiers to the date (e.g. logic or offsets)
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::TagsGeneric]) == true) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
@@ -172,7 +172,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		else
 			PrintErrorExit("Invalid argument supplied");
 		#if 0 // @TODO - Decide what to do with all of this
-		else if(IsDate(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
+		else if(IsDateAndValid(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
       if(arg[0] == '.') {
 				if(dateDue.length == 0)
 					dateDue = DateToString(GetDate(0));

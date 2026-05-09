@@ -8,14 +8,11 @@ Misc
 Core commands
 	- List
 		- Printing tasks 'wide'
-	- Modify
-		- When making any changes to an entry, display the updated portion of info before and after?
 	
 Testbench / testbenches
 
 Dates
-	- "today" as short hand for current date
-	- [date]+/x - x days before / after [date] as a date argument
+	- "today" as short hand for current date @WIP
 	- </<=/>/>=[date] as date argument
 	- Checking whether it actually exists. E.g. 30th February
 			
