@@ -10,10 +10,11 @@ Core commands
 		- Sorting! Need special arguments
 		- Printing tasks 'wide'
 	
-Testbench / testbenches
+Testbench / testbenches @WIP
+	- Try a bat file
+		- Write the expected todos.txt contents with echo x >, the run comp
 
 Dates
-	- </<=/>/>=[date] as date argument
 	- Checking whether it actually exists. E.g. 30th February
 			
 Todos file
