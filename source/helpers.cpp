@@ -1,6 +1,19 @@
 #include <stdio.h>
+#include "apad_error.h"
 #include "helpers.h"
 
+#include <time.h>
+#include "apad_time.h"
+program_local tm ConvertDateToCSLTime(date& d) {
+	tm ret = {};
+	ret.tm_wday = d.dayOfTheWeek == 7 ? 0 : d.dayOfTheWeek;
+	ret.tm_mday = d.day;
+	ret.tm_mon = d.month - 1;
+	ret.tm_year = d.year - 1900;
+	return ret;
+}
+
+#include "apad_string.h"
 bool IsValidChar(char c) {
   return IsLetter(c) == true || IsNumber(c) == true || c == '\"' || c == '/' || c == '-' || c == '?' || c == '!' || c == '#';
 }
@@ -18,6 +31,8 @@ bool AnyTagsPresent(char** tags) {
 	return false;
 }
 
+#include "apad_file.h"
+#include "apad_string.h"
 char* GetBackupTodosFilePath(const char* filePath) {
 	AssertRetType(filePath != Null, Null);
 	char* backupPath = AllocateString(filePath, Null);
@@ -102,6 +117,9 @@ void SaveTodosFileBackup(memory_stack& todoList, const char* dataPath) {
 	SaveFile(file.memory, file.size, backupPath);
 }
 
+#include <time.h>
+#include "apad_string.h"
+#include "apad_time.h"
 void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags) {
   // @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
@@ -113,7 +131,24 @@ void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char
 	printf("\n  ID:         %u\n", id);
 	printf("  String:     %s\n", task);
 	printf("  Date added: %s\n", dateAdded);
-	printf("  Date due:   %s\n", dateDue == Null ? "-" : dateDue);
+	printf("  Date due:   %s", dateDue == Null ? "-" : dateDue);
+	if(dateDue != Null) {
+		auto todayDate = GetDate(0);
+		auto todayCSL = ConvertDateToCSLTime(todayDate);
+		auto todayTime = mktime(&todayCSL);
+		
+		auto dateDueDate = StringToDate(dateDue);
+		auto dateDueCSL = ConvertDateToCSLTime(dateDueDate);
+		auto dateDueTime = mktime(&dateDueCSL);
+		
+		auto diffSecs = difftime(dateDueTime, todayTime);
+		si32 diffDays = diffSecs /60 / 60 / 24;
+		
+		 if(diffDays > 0)
+		   printf(" (+%i)\n", diffDays);
+		 else
+		   printf(" (%i)\n", diffDays);
+	}
 	printf("  Tags:       ");
 
 	if(AnyTagsPresent(tags) == true) {

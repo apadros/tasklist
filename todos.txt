@@ -9,7 +9,7 @@ Core commands
 	- List
 		- Sorting! Need special arguments
 		- Printing tasks 'wide'
-	
+		
 Testbench / testbenches @WIP
 	- Try a bat file
 		- Write the expected todos.txt contents with echo x >, the run comp

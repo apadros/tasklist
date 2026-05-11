@@ -10,16 +10,7 @@
 #include "apad_string.h"
 #include "apad_time.h"
 #include "apad_win32.h"
-
 #include "helpers.h"
-
-const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo" };
-BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Length } EndEnum(ValidCommandsIndex);
-
-const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t", "-t1", "-t2", "-t3", "-t4", "-t5" };
-BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, TagsGeneric, Tag1, Tag2, Tag3, Tag4, Tag5, Length } EndEnum(ValidArgumentsIndex);
-
-#include "helpers.cpp"
 
 file todosFile;
 void ExitFunction() {
@@ -36,7 +27,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "list", "-da", "<10/05" };
+		char* debugArgs[] = { args[0], "list", "all" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif

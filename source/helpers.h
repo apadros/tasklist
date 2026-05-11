@@ -2,6 +2,7 @@
 #define HELPERS_H
 
 #include "apad_base_types.h"
+#include "apad_intrinsics.h"
 
 typedef ui16 guid;
 const   ui8  MaxTags = 5;
@@ -26,6 +27,13 @@ struct todoListEntry {
 #define TodoEntriesLoop(_todoList)    ForAll((_todoList).size / sizeof(todoListEntry))
 #define GetTodosEntry(_todoList, _it) (((todoListEntry*)(_todoList).memory) + it)
 
+program_unique const char* ValidCommands[] = 	{ "add", "list", "del", "mod", "undo" };
+program_unique BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, Length } EndEnum(ValidCommandsIndex);
+
+program_unique const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t", "-t1", "-t2", "-t3", "-t4", "-t5" };
+program_unique BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, TagsGeneric, Tag1, Tag2, Tag3, Tag4, Tag5, Length } EndEnum(ValidArgumentsIndex);
+
+
 bool IsValidChar(char c);
 bool AnyTagsPresent(char** tags);
 bool TagIsValid(const char* tag);
@@ -34,6 +42,7 @@ void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char
 
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags);
 
+#include "apad_memory.h"
 char* GetBackupTodosFilePath(const char* filePath);
 void  SaveTodosFile(memory_stack& todoList, const char* dataPath);
 void  SaveTodosFileBackup(memory_stack& todoList, const char* dataPath);
