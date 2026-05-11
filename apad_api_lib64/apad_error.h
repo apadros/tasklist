@@ -5,7 +5,7 @@
 
 // ******************** Generic ******************** //
 
-dll_import void DisplayError(const char* string);
+dll_import void DisplayError(const char* string); // Prints the string without adding anything
 
 dll_import void ExitProgram(bool error);
 dll_import void RegisterExitFunction(void (*function)()); // Function to be called within ExitProgram()

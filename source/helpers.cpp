@@ -131,7 +131,7 @@ void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char
 	printf("\n  ID:         %u\n", id);
 	printf("  String:     %s\n", task);
 	printf("  Date added: %s\n", dateAdded);
-	printf("  Date due:   %s", dateDue == Null ? "-" : dateDue);
+	printf("  Date due:   %s", dateDue == Null ? "-\n" : dateDue);
 	if(dateDue != Null) {
 		auto todayDate = GetDate(0);
 		auto todayCSL = ConvertDateToCSLTime(todayDate);

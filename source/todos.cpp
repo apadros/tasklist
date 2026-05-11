@@ -330,7 +330,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 			entry->ID = ++guidCounter;
 			entry->task = GetLineDataElement(line, 0);
 			entry->dateAdded = GetLineDataElement(line, 1);
-			entry->dateDue = GetLineDataElement(line, 2);
+			char* dateDue = GetLineDataElement(line, 2);
+			if(dateDue[0] != '-')
+				entry->dateDue = dateDue;
 			FromTo(3, line.count) {
 				char* tag = GetLineDataElement(line, it);
 				if(it > 3 || tag[0] != '-')
