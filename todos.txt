@@ -11,8 +11,10 @@ Core commands
 		- Printing tasks 'wide'
 		
 Testbench / testbenches @WIP
-	- Try a bat file
-		- Write the expected todos.txt contents with echo x >, the run comp
+	- List
+	- Del
+	- Mod
+	- Undo
 
 Dates
 	- Checking whether it actually exists. E.g. 30th February

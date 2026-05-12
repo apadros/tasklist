@@ -9,9 +9,31 @@
 
 file todosFile = {};
 
+void PrintToLog(const char* string) {
+	system(Concatenate(3, "echo ", string, " >> testbench_log.txt"));
+}
+
+void PrintLogNewline() {
+	system("echo: >> testbench_log.txt");
+}
+
 void ExitFunction() {
-	system("copy ..\\..\\data\\todos_testbench_backup.txt ..\\..\\data\\todos.txt /y");
+	// Add the contents of todos.txt to log file
+	PrintLogNewline();
+	PrintToLog("todos.txt contents");
+	PrintLogNewline();
+	system("type ..\\..\\data\\todos.txt >> testbench_log.txt");
+	PrintLogNewline();
+	
+	// Restore original todos.txt
+	PrintToLog("Restoring todos.txt...");
+	system("copy ..\\..\\data\\todos_testbench_backup.txt ..\\..\\data\\todos.txt /y >> testbench_log.txt");
 	// system("del ..\\..\\data\\todos_testbench_backup.txt");
+	
+	PrintLogNewline();
+	PrintToLog("Log end");
+	system("del temp.txt /q");
+	
 	if(IsValid(todosFile) == true)
 		FreeFile(todosFile);
 }
@@ -21,42 +43,74 @@ ConsoleAppEntryPoint(args, argsCount) {
 	SetDisplayAPIAssertions(true);
 	SetCallExitInAPIAssertions(true);
 	
-	printf("\nBacking up todos.txt...");
-	system("copy ..\\..\\data\\todos.txt ..\\..\\data\\todos_testbench_backup.txt");
+	// Open log file
+	system("echo Log start > testbench_log.txt");
+	PrintLogNewline();
+	
+	// Backup and reset todos.txt
+	PrintToLog("Backing up todos.txt...");
+	system("copy ..\\..\\data\\todos.txt ..\\..\\data\\todos_testbench_backup.txt >> testbench_log.txt");
+	PrintLogNewline();
 	RegisterExitFunction(ExitFunction); // No matter what happens, the original will be restored and cleanup will be carried out
+	system("del ..\\..\\data\\todos.txt /q");
 	
-	system("echo \"task 1\" 04/05/2026 09/05/2026 \"tag 1\" > ..\\..\\data\\todos.txt"); // Manually create 1st task, todos.txt needs to have at least 1
+	// Run testbench
+	printf("\nRunning testbench...");
 	
-	// Run a number of commands, then compare files
-	printf("\nRunning testbench...\n");
-	system("todos add -s \"sample task\" -dd 10/06/2026 -t \"tag 2\"");
-	
-	// Run comparison	
-	const char* fileStrings[] = { "\"task 1\" 04/05/2026 09/05/2026 \"tag 1\"",
-																Concatenate(3, "\"sample task\" ", DateToString(GetDate(0)), " 10/06/2026 \"tag 2\"")
-																};
-	todosFile = LoadFile("../../data/todos.txt");
-	ui8 stringsRead = 0;
-	LineReadLoopHeader(readIndex, todosFile) {
-		// If this is hit, need to add more to fileString[]
-		if(stringsRead >= GetArrayLength(fileStrings)) {
-			printf("ERROR: more strings were written to todos.txt than were tested\n");
-			break;
-		}
+	// Run a number of commands
+	PrintToLog("Running commands...");
+	PrintLogNewline();
+	const char* todayString = DateToString(GetDate(0));
+	const char* commands[] = { "todos add -s \"first task\" -dd 09/05/2026 -t \"tag 2\"",
+														 "todos add -s \"task 2\" -dd 10/06/2026 -t \"tag 2\"",
+		                         "todos add -s third -dd today",
+		                         "todos add -s \"task number 4\" -t3 tag3"
+														 };	
+	ForAll(GetArrayLength(commands)) {
+		PrintToLog(commands[it]);
 		
-		// Read line and compare with fileStrings[]
-		auto line = ReadLine(todosFile, readIndex);
-		char* lineString = (char*)line.data.memory;
-		if(StringsAreEqual(lineString, fileStrings[stringsRead++]) == true)
-			printf("Passed\n");
+		if(it == 0) { // Need to add first task manually for now
+			const char* string = Concatenate(3, "echo \"first task\" ", todayString, " 09/05/2026 \"tag 1\"  > ..\\..\\data\\todos.txt");
+			system(string);
+		}
 		else
-			printf("Failed\n");
+			system(Concatenate(2, commands[it], " >> temp.txt"));
 	}
 	
+	// Run comparison	
+	PrintLogNewline();
+	PrintToLog("Comparing...");
+	PrintLogNewline();
+	const char* fileStrings[] = { Concatenate(3, "\"first task\" ", todayString, " 09/05/2026 \"tag 1\" "),
+																Concatenate(3, "\"task 2\" ", todayString, " 10/06/2026 \"tag 2\" "),
+																Concatenate(5, "\"third\" ", todayString, " ", todayString, " - "),
+																Concatenate(3, "\"task number 4\" ", todayString, " - \"tag3\" ")
+																};
+	todosFile = LoadFile("..\\..\\data\\todos.txt");
+	const char* fileLine = (const char*)todosFile.memory;
+	ForAll(GetArrayLength(commands)) {
+		char* newLine = (char*)FindSubstring("\r", fileLine);
+		Assert(newLine != Null);
+		*newLine = '\0';
+		
+		if(StringsAreEqual(fileStrings[it], fileLine) == false) {
+			printf("failed\n");
+			PrintToLog("Test failed");
+			PrintToLog(Concatenate(2, "  Target: ", fileStrings[it]));
+			PrintToLog(Concatenate(2, "  Actual: ", fileLine));
+			goto program_exit;
+		}
+		
+		fileLine = newLine + 2;
+	}
+	printf("passed\n");
+	PrintToLog("All tests passed");
+			
 	// @TODO - List
 	// @TODO - Del
 	// @TODO - Mod
-	// @TODO - Undo	
+	// @TODO - Undo
 	
-	printf("\nTestbench finished.\n");
+	program_exit:
+	return 0;
 }

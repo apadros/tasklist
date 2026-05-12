@@ -26,11 +26,11 @@ dll_import 		 const char*  GetFileExtension(const char* path); // Does not alloc
 
 struct file_line {
 	memory_stack data;
-	ui8          count;
+	ui8          count; // Number of individual data elements in the line, each separated by null terminators
 };
 
 #define              LineReadLoopHeader(_readIndexID, _file) for(ui32 _readIndexID = 0; _readIndexID < (_file).size; )
-dll_import file_line ReadLine(file& f, ui32& readIndex); // Will treat any data between quotation marks as a single string
+dll_import file_line ParseLine(file& f, ui32& readIndex); // Will treat any data between quotation marks as a single string
 dll_import bool      LineIsValid(file_line& f);
 dll_import char* 		 GetLineDataElement(file_line& line, ui8 index);
 dll_import void 		 FreeLine(file_line& line); // Must be called after every call to ReadLine() once data is not needed
