@@ -57,59 +57,76 @@ ConsoleAppEntryPoint(args, argsCount) {
 	// Run testbench
 	printf("\nRunning testbench...");
 	
-	// Run a number of commands
-	PrintToLog("Running commands...");
-	PrintLogNewline();
 	const char* todayString = DateToString(GetDate(0));
-	const char* commands[] = { "todos add -s \"first task\" -dd 09/05/2026 -t \"tag 2\"",
-														 "todos add -s \"task 2\" -dd 10/06/2026 -t \"tag 2\"",
-		                         "todos add -s third -dd today",
-		                         "todos add -s \"task number 4\" -t3 tag3"
-														 };	
-	ForAll(GetArrayLength(commands)) {
-		PrintToLog(commands[it]);
+	
+	// Run a number of commands
+	PrintToLog("Running add commands...");
+	PrintLogNewline();
+	const char* addCommands[] = { "todos add -s \"first task\" -dd 09/05/2026 -t \"tag 2\"",
+														    "todos add -s \"task 2\" -dd 10/06/2026 -t \"tag 2\"",
+		                            "todos add -s third -dd today",
+		                            "todos add -s \"task number 4\" -t3 tag3"
+															};	
+	const char* delCommands[] = { "todos del 1", "todos del 2" };
+	
+	// Test add commands
+	ForAll(GetArrayLength(addCommands)) {
+		PrintToLog(addCommands[it]);
 		
 		if(it == 0) { // Need to add first task manually for now
 			const char* string = Concatenate(3, "echo \"first task\" ", todayString, " 09/05/2026 \"tag 1\"  > ..\\..\\data\\todos.txt");
 			system(string);
 		}
 		else
-			system(Concatenate(2, commands[it], " >> temp.txt"));
+			system(Concatenate(2, addCommands[it], " >> temp.txt"));
 	}
 	
 	// Run comparison	
 	PrintLogNewline();
 	PrintToLog("Comparing...");
 	PrintLogNewline();
-	const char* fileStrings[] = { Concatenate(3, "\"first task\" ", todayString, " 09/05/2026 \"tag 1\" "),
-																Concatenate(3, "\"task 2\" ", todayString, " 10/06/2026 \"tag 2\" "),
-																Concatenate(5, "\"third\" ", todayString, " ", todayString, " - "),
-																Concatenate(3, "\"task number 4\" ", todayString, " - \"tag3\" ")
-																};
+	const char* addFileString[] = { Concatenate(3, "\"first task\" ", todayString, " 09/05/2026 \"tag 1\" "),
+																  Concatenate(3, "\"task 2\" ", todayString, " 10/06/2026 \"tag 2\" "),
+																  Concatenate(5, "\"third\" ", todayString, " ", todayString, " - "),
+																  Concatenate(3, "\"task number 4\" ", todayString, " - \"tag3\" ")
+																  };
 	todosFile = LoadFile("..\\..\\data\\todos.txt");
 	const char* fileLine = (const char*)todosFile.memory;
-	ForAll(GetArrayLength(commands)) {
+	ForAll(GetArrayLength(addCommands)) {
 		char* newLine = (char*)FindSubstring("\r", fileLine);
 		Assert(newLine != Null);
 		*newLine = '\0';
 		
-		if(StringsAreEqual(fileStrings[it], fileLine) == false) {
+		if(StringsAreEqual(addFileString[it], fileLine) == false) {
 			printf("failed\n");
 			PrintToLog("Test failed");
-			PrintToLog(Concatenate(2, "  Target: ", fileStrings[it]));
+			PrintToLog(Concatenate(2, "  Target: ", addFileString[it]));
 			PrintToLog(Concatenate(2, "  Actual: ", fileLine));
 			goto program_exit;
 		}
 		
 		fileLine = newLine + 2;
 	}
-	printf("passed\n");
-	PrintToLog("All tests passed");
-			
-	// @TODO - List
+	FreeFile(todosFile);
+	
+	// Test del commands @WIP
+	PrintToLog("Running del commands...");
+	PrintLogNewline();
+	ForAll(GetArrayLength(delCommands)) {
+		PrintToLog(delCommands[it]);
+		system(Concatenate(2, delCommands[it], " >> temp.txt"));
+		
+	}
+	
+	
 	// @TODO - Del
 	// @TODO - Mod
 	// @TODO - Undo
+	
+	// @TODO - List - do at the end
+	
+	printf("passed\n");
+	PrintToLog("All tests passed");
 	
 	program_exit:
 	return 0;
