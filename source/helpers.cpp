@@ -118,8 +118,24 @@ void SaveTodosFileBackup(memory_stack& todoList, const char* dataPath) {
 }
 
 #include <time.h>
-#include "apad_string.h"
 #include "apad_time.h"
+si32 GetDaysOffsetFromToday(const char* targetDate) {
+	Assert(targetDate != Null);
+	
+	auto todayDate = GetDate(0);
+	auto todayCSL = ConvertDateToCSLTime(todayDate);
+	auto todayTime = mktime(&todayCSL);
+	
+	auto targetDateDate = StringToDate(targetDate);
+	auto targetDateCSL = ConvertDateToCSLTime(targetDateDate);
+	auto targetDueTime = mktime(&targetDateCSL);
+		
+	auto diffSecs = difftime(targetDueTime, todayTime);
+	si32 diffDays = diffSecs /60 / 60 / 24;
+	return diffDays;	
+}
+
+#include "apad_string.h"
 void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags) {
   // @TODO - Add assertions once program takes shape
 	// AssertRet(id != Null);
@@ -133,16 +149,7 @@ void PrintDetailedTask(ui16 id, char* task, char* dateAdded, char* dateDue, char
 	printf("  Date added: %s\n", dateAdded);
 	printf("  Date due:   %s", dateDue == Null ? "-\n" : dateDue);
 	if(dateDue != Null) {
-		auto todayDate = GetDate(0);
-		auto todayCSL = ConvertDateToCSLTime(todayDate);
-		auto todayTime = mktime(&todayCSL);
-		
-		auto dateDueDate = StringToDate(dateDue);
-		auto dateDueCSL = ConvertDateToCSLTime(dateDueDate);
-		auto dateDueTime = mktime(&dateDueCSL);
-		
-		auto diffSecs = difftime(dateDueTime, todayTime);
-		si32 diffDays = diffSecs /60 / 60 / 24;
+		si32 diffDays = GetDaysOffsetFromToday(dateDue);
 		
 		 if(diffDays > 0)
 		   printf(" (+%i)\n", diffDays);

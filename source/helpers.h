@@ -33,6 +33,7 @@ program_unique BeginEnum(ValidCommandsIndex) { Add, List, Delete, Modify, Undo, 
 program_unique const char* ValidArguments[] =   { "-id", "-s", "-da", "-dd", "-t", "-t1", "-t2", "-t3", "-t4", "-t5" };
 program_unique BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateDue, TagsGeneric, Tag1, Tag2, Tag3, Tag4, Tag5, Length } EndEnum(ValidArgumentsIndex);
 
+si32 GetDaysOffsetFromToday(const char* targetDate);
 
 bool IsValidChar(char c);
 bool AnyTagsPresent(char** tags);

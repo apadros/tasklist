@@ -48,6 +48,7 @@ bool LoadTodosAndCompare(const char** targetFileContent, ui8 length) {
 			PrintToLog("Test failed");
 			PrintToLog(Concatenate(2, "  Target: ", targetLine));
 			PrintToLog(Concatenate(2, "  Actual: ", fileLine));
+			FreeFile(todosFile);
 			return false;
 		}
 		
@@ -60,7 +61,6 @@ bool LoadTodosAndCompare(const char** targetFileContent, ui8 length) {
 	PrintToLog("todos.txt contents");
 	PrintLogNewline();
 	system("type ..\\..\\data\\todos.txt >> testbench_log.txt");
-	PrintLogNewline();
 	
 	return true;
 }
@@ -102,13 +102,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 	const char* todayString = DateToString(GetDate(0));
 	
 	// Test add commands
-	PrintToLog("Running add commands...");
 	PrintLogNewline();
+	PrintToLog("Running add commands...");
 	const char* commands[] = { "todos add -s \"first task\" -dd 09/05/2026 -t \"tag 2\"",
 														 "todos add -s \"task 2\" -dd 10/06/2026 -t \"tag 2\"",
 		                         "todos add -s third -dd today",
 		                         "todos add -s \"task number 4\" -t3 tag3"
 														 };	
+	PrintLogNewline();
 	system(Concatenate(3, "echo \"first task\" ", todayString, " 09/05/2026 \"tag 1\"  > ..\\..\\data\\todos.txt")); // Need to add first task manually for now
 	PrintToLog(commands[0]);
 	CarryOutCommands(commands + 1, GetArrayLength(commands) - 1);
@@ -124,10 +125,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	
 	// Test del commands
-	PrintToLog("Running del commands...");
 	PrintLogNewline();
+	PrintToLog("Running del commands...");
 	commands[0] = "todos del 1";
 	commands[1] = "todos del 2";
+	PrintLogNewline();
 	CarryOutCommands(commands, 2);
 	
 	// Compare
@@ -142,10 +144,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	
 	// Test mod commands
-	PrintToLog("Running mod commands...");
 	PrintLogNewline();
+	PrintToLog("Running mod commands...");
 	commands[0] = "todos mod -id 1 -s \"modded string\" -t2 \"new tag\"";
 	commands[1] = "todos mod -id 2 -dd 10/10/2030+5 -t \"\"";
+	PrintLogNewline();
 	CarryOutCommands(commands, 2);
 	
 	// Compare
@@ -156,9 +159,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	
 	// Test undo command
-	PrintToLog("Running undo command...");
 	PrintLogNewline();
+	PrintToLog("Running undo command...");
 	commands[0] = "todos undo";
+	PrintLogNewline();
 	CarryOutCommands(commands, 1);
 	
 	// Compare
@@ -167,9 +171,50 @@ ConsoleAppEntryPoint(args, argsCount) {
 	if(comparison == false)
 		goto program_exit;
 	
-	// @TODO - List - do at the end
+	// List @WIP - Need to get the date due offset right
+	#if 0
+	PrintLogNewline();
+	PrintToLog("Running list command...");
+	system("del temp.txt");
+	commands[0] = "todos list all";
+	PrintLogNewline();
+	CarryOutCommands(commands, 1);
+	const char* targetOutput = { "\r\n"
+															 "  ID:         1\r\n"
+															 "  String:     modded string\r\n"
+															 "  Date added: 13/05/2026\r\n"
+															 "  Date due:   10/06/2026 (+28)\r\n"
+															 "  Tags:       tag 2\r\n"
+															 "              new tag\r\n"
+															 "\r\n"
+															 "  ID:         2\r\n"
+															 "  String:     task number 4\r\n"
+															 "  Date added: 13/05/2026\r\n"
+															 "  Date due:   -\r\n"
+															 "  Tags:       tag3\r\n"
+															 "\r\n"
+															 };
+	// Run custom comparison
+	{
+		auto tempFile = LoadFile("temp.txt");
+		const char* tempContents = (const char*)tempFile.memory;
+		
+		if(StringsAreEqual(tempContents, targetOutput) == false) {
+			printf("failed\n");
+			PrintLogNewline();
+			PrintToLog("Test failed");
+			PrintToLog(Concatenate(2, "  Target: ", targetOutput));
+			PrintToLog(Concatenate(2, "  Actual: ", tempContents));
+			FreeFile(tempFile);
+			goto program_exit;
+		}
+		
+		FreeFile(tempFile);
+	}
+	#endif
 	
 	printf("passed\n");
+	PrintLogNewline();
 	PrintToLog("All tests passed");
 	
 	program_exit:
