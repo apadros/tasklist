@@ -321,7 +321,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 		// Extract line data
 		LineReadLoopHeader(readIndex, todosFile) {
-			auto line = ReadLine(todosFile, readIndex);
+			auto line = ParseLine(todosFile, readIndex);
 			Assert(LineIsValid(line));
 			Assert(line.count >= 4);
 			Assert(line.count <= 3 + MaxTags);

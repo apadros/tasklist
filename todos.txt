@@ -9,15 +9,11 @@ Core commands
 	- List
 		- Sorting! Need special arguments
 		- Printing tasks 'wide'
+	- Undo - undo the undo! Keep a separate files, then delete
 		
-Testbench / testbenches @WIP
-	- List
-	- Del
-	- Mod
-	- Undo
-
 Dates
 	- Checking whether it actually exists. E.g. 30th February
+	- Adding the concept of work days offset[w] - skip Saturdays and Sundays
 			
 Todos file
 	- Daily local backup at the start of the day?
