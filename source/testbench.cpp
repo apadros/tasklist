@@ -1,11 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h> // Run system commands
 #include "apad_array.h"
 #include "apad_error.h"
 #include "apad_file.h"
 #include "apad_string.h"
 #include "apad_time.h"
 #include "apad_win32.h"
-#include <stdio.h>
-#include <stdlib.h> // Run system commands
+#include "helpers.cpp"
 
 file todosFile = {};
 
@@ -171,29 +172,28 @@ ConsoleAppEntryPoint(args, argsCount) {
 	if(comparison == false)
 		goto program_exit;
 	
-	// List @WIP - Need to get the date due offset right
-	#if 0
+	// List
 	PrintLogNewline();
 	PrintToLog("Running list command...");
 	system("del temp.txt");
 	commands[0] = "todos list all";
 	PrintLogNewline();
 	CarryOutCommands(commands, 1);
-	const char* targetOutput = { "\r\n"
-															 "  ID:         1\r\n"
-															 "  String:     modded string\r\n"
-															 "  Date added: 13/05/2026\r\n"
-															 "  Date due:   10/06/2026 (+28)\r\n"
-															 "  Tags:       tag 2\r\n"
-															 "              new tag\r\n"
-															 "\r\n"
-															 "  ID:         2\r\n"
-															 "  String:     task number 4\r\n"
-															 "  Date added: 13/05/2026\r\n"
-															 "  Date due:   -\r\n"
-															 "  Tags:       tag3\r\n"
-															 "\r\n"
-															 };
+	auto daysOffset = GetDaysOffsetFromToday("10/06/2026");
+	const char* targetOutput = Concatenate(6, "\r\n"
+																						"  ID:         1\r\n"
+																						"  String:     modded string\r\n",
+														 Concatenate(3, "  Date added: ", todayString, "\r\n"),
+														 Concatenate(4, "  Date due:   10/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")\r\n"),
+																						"  Tags:       tag 2\r\n"
+																						"              new tag\r\n"
+																						"\r\n"
+																						"  ID:         2\r\n"
+																						"  String:     task number 4\r\n",
+														 Concatenate(3, "  Date added: ", todayString, "\r\n"),
+																						"  Date due:   -\r\n"
+																						"  Tags:       tag3\r\n"
+																						"\r\n");
 	// Run custom comparison
 	{
 		auto tempFile = LoadFile("temp.txt");
@@ -203,15 +203,45 @@ ConsoleAppEntryPoint(args, argsCount) {
 			printf("failed\n");
 			PrintLogNewline();
 			PrintToLog("Test failed");
-			PrintToLog(Concatenate(2, "  Target: ", targetOutput));
-			PrintToLog(Concatenate(2, "  Actual: ", tempContents));
+			
+			char* target = Concatenate(2, "Target: ", targetOutput);
+			auto  targetLength = GetStringLength(target);
+			FromTo(1, targetLength) { // Process to remove excess spaces, newlines and carriage returns
+			  char* c = target + it;
+				if(*c == ' ' || *c == '\r' || *c == '\n') { 
+					*c = ' ';
+					if(*(c - 1) == ' ') { // Shift back by 1
+						ui16 start = it;
+						FromTo(start, targetLength) // Shift back the rest
+							target[it] = target[it + 1];
+						targetLength -= 1;
+						it -= 1; // To check the newly moved char
+					}
+				}
+			}
+			char* actual = Concatenate(2, "Actual: ", tempContents);
+			auto  actualLength = GetStringLength(actual);
+			FromTo(1, actualLength) { // Process to remove excess spaces, newlines and carriage returns
+			  char* c = actual + it;
+				if(*c == ' ' || *c == '\r' || *c == '\n') { 
+					*c = ' ';
+					if(*(c - 1) == ' ') { // Shift back by 1
+						ui16 start = it;
+						FromTo(start, actualLength) // Shift back the rest
+							actual[it] = actual[it + 1];
+						actualLength -= 1;
+						it -= 1; // To check the newly moved char
+					}
+				}
+			}
+			PrintToLog(target);
+			PrintToLog(actual);
 			FreeFile(tempFile);
 			goto program_exit;
 		}
 		
 		FreeFile(tempFile);
 	}
-	#endif
 	
 	printf("passed\n");
 	PrintLogNewline();

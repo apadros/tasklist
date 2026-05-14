@@ -3,10 +3,14 @@
 if not exist build ( mkdir build )
 cd build
 
-move rebuild_debug.bat ..
 del * /q
-move ..\rebuild_debug.bat .
 
 copy ..\..\apad_api_lib64\*debug.* .
 
 cl /nologo /w /I..\..\apad_api_lib64 /Fe: todos /Od /Zi /DAPAD_DEBUG /std:c++17 ..\helpers.cpp ..\todos.cpp *debug.lib
+
+REM Build rebuild_debug.bat
+echo @echo off > rebuild_debug.bat
+echo: >> rebuild_debug.bat
+echo cd .. >> rebuild_debug.bat
+echo call build_debug.bat >> rebuild_debug.bat

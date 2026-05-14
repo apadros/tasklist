@@ -24,3 +24,8 @@ echo Done
 
 echo:
 
+REM Build rebuild_testbench.bat
+echo @echo off > rebuild_testbench.bat
+echo: >> rebuild_testbench.bat
+echo cd .. >> rebuild_testbench.bat
+echo call build_testbench.bat >> rebuild_testbench.bat
