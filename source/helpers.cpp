@@ -32,6 +32,24 @@ bool AnyTagsPresent(char** tags) {
 }
 
 #include "apad_file.h"
+void UpdateLogFile(const char* string, memory_stack& logFile, const char* path) {
+	Assert(string != Null);
+	Assert(path != Null);
+	PushString(string, false, logFile);
+	SaveFile(logFile.memory, logFile.size, path);
+}
+
+todoListEntry* FindEntry(const char* id, memory_stack& todoList) {
+	auto ID = StringToInt(id, Null);
+	TodoEntriesLoop(todoList) {
+		auto* entry = GetTodosEntry(todoList, it);
+		if(entry->ID == ID)
+			return entry;
+	}
+	return Null;
+}
+
+#include "apad_file.h"
 #include "apad_string.h"
 char* GetBackupTodosFilePath(const char* filePath) {
 	AssertRetType(filePath != Null, Null);

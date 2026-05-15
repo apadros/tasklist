@@ -12,10 +12,16 @@
 #include "apad_win32.h"
 #include "helpers.h"
 
-file todosFile;
+file 				 todosFile;
+memory_stack todoList;
+memory_stack logFile;
 void ExitFunction() {
 	if(IsValid(todosFile) == true)
 		FreeFile(todosFile);
+	if(IsValid(todoList) == true)
+		FreeStack(todoList);
+	if(IsValid(logFile) == true)
+		FreeFile(logFile);
 }
 
 ConsoleAppEntryPoint(args, argsCount) {
@@ -76,6 +82,46 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#define CheckArgsExit() { if(it >= argsCount) \
 															PrintErrorExit("Not enough arguments supplied."); }
 
+	// Open the todos file and generate task list
+	#ifdef APAD_DEBUG
+	const char* dataPath = "../../data/todos.txt";
+	#else
+	const char* dataPath = "data/todos.txt";
+	#endif
+	guid guidCounter = 0;
+			 todoList = AllocateStack();
+	{
+		if(FileExists(dataPath) == false)
+			PrintErrorExit("Couldn't find data/todos.txt");
+
+		todosFile = LoadFile(dataPath);
+		if(AssertionWasHit() == true)
+			PrintErrorExit("Couldn't load data/todos.txt");
+
+		// Extract line data
+		LineReadLoopHeader(readIndex, todosFile) {
+			auto line = ParseLine(todosFile, readIndex);
+			Assert(LineIsValid(line));
+			Assert(line.count >= 4);
+			Assert(line.count <= 3 + MaxTags);
+
+			auto* entry = PushStruct(todoListEntry, todoList);
+			entry->ID = ++guidCounter;
+			entry->task = GetLineDataElement(line, 0);
+			entry->dateAdded = GetLineDataElement(line, 1);
+			char* dateDue = GetLineDataElement(line, 2);
+			if(dateDue[0] != '-')
+				entry->dateDue = dateDue;
+			FromTo(3, line.count) {
+				char* tag = GetLineDataElement(line, it);
+				if(it > 3 || tag[0] != '-')
+					entry->tags[it - 3] = tag;
+			}
+
+			FreeLine(line);
+		}
+	}
+
 	// Parse arguments
 	FromTo(2, argsCount) {
 		const char* arg = args[it];
@@ -92,6 +138,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 			it += 1;
 			CheckArgsExit();
 			id = args[it];
+			
+			if(FindEntry(id, todoList) == Null)
+				PrintErrorExit("Invalid ID specified");
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::TaskString]) == true) {
 			it += 1;
@@ -301,85 +350,44 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 
-	#ifdef APAD_DEBUG
-	const char* dataPath = "../../data/todos.txt";
-	#else
-	const char* dataPath = "data/todos.txt";
-	#endif
-
-	// Open the todos file and generate task list
-	guid guidCounter = 0;
-
-	memory_stack todoList = AllocateStack();
-	{
-		if(FileExists(dataPath) == false)
-			PrintErrorExit("Couldn't find data/todos.txt");
-
-		todosFile = LoadFile(dataPath);
-		if(AssertionWasHit() == true)
-			PrintErrorExit("Couldn't load data/todos.txt");
-
-		// Extract line data
-		LineReadLoopHeader(readIndex, todosFile) {
-			auto line = ParseLine(todosFile, readIndex);
-			Assert(LineIsValid(line));
-			Assert(line.count >= 4);
-			Assert(line.count <= 3 + MaxTags);
-
-			auto* entry = PushStruct(todoListEntry, todoList);
-			entry->ID = ++guidCounter;
-			entry->task = GetLineDataElement(line, 0);
-			entry->dateAdded = GetLineDataElement(line, 1);
-			char* dateDue = GetLineDataElement(line, 2);
-			if(dateDue[0] != '-')
-				entry->dateDue = dateDue;
-			FromTo(3, line.count) {
-				char* tag = GetLineDataElement(line, it);
-				if(it > 3 || tag[0] != '-')
-					entry->tags[it - 3] = tag;
-			}
-
-			FreeLine(line);
-		}
-	}
-	
-	// Open the log file
-	{
-		char* path = AllocateString(dataPath, Null);
-		char* fileNameStart = (char*)GetFileNameAndExtension(path);
+	// Update the log file with command and arguments, plus time stamp
+	const char* logFilePath = Null;
+	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == false) {
+		logFilePath = AllocateString(dataPath, Null);
+		char* fileNameStart = (char*)GetFileNameAndExtension(logFilePath);
 		*(fileNameStart)= '\0';
 		const char* extension = GetFileExtension(dataPath);
-		path = Concatenate(3, path, "log.", extension);
+		logFilePath = Concatenate(3, logFilePath, "log.", extension);
 		
 		// Store time, command and changes of last x commands
 		
 		// Extract the ocntents of previous log entries and store in current log
-		memory_stack log = AllocateStack();
-		if(FileExists(path) == true) {
-			file file = LoadFile(path);	
-			Push(file.memory, file.size, log);
+		logFile = AllocateStack();
+		if(FileExists(logFilePath) == true) {
+			file file = LoadFile(logFilePath);	
+			Push(file.memory, file.size, logFile);
 			FreeFile(file);
 		}
 		
 		// Search through file for today's date header. If not found, add it
-		char* eof = PushString("\0", false, log);
-		auto todayStringHeader = Concatenate(3, "\n# ", DateToString(GetDate(0)), " #");
-		if(FindSubstring(todayStringHeader, (const char*)log.memory) == Null) {
+		char* eof = PushString("\0", false, logFile);
+		char* todayStringHeader = Concatenate(3, "\n# ", DateToString(GetDate(0)), " #");
+		if(FindSubstring(todayStringHeader, (const char*)logFile.memory) == Null) {
 			*eof = '\n';
-			PushString(todayStringHeader, false, log);
-			PushString("\n", false, log);
-		}
+			PushString(todayStringHeader, false, logFile);
+			PushString("\n", false, logFile);
+		} 
+		else
+			logFile.size -= 1;
 		
 		// Add time
-		PushString(GetTimeNow(), false, log);
-		PushString(" ", false, log);
+		const char* string = Concatenate(3, "\n", GetTimeNow(), " ");
 		
 		// Push arguments
 		FromTo(0, argsCount)
-			PushString(Concatenate(2, args[it], " "), false, log); 
-		PushString("\n", false, log);
+			string = Concatenate(3, string, args[it], " "); 
 		
-		SaveFile(log.memory, log.size, path);
+		UpdateLogFile(string, logFile, logFilePath);
 	}
 
 	// Parse command, output error message if invalid
@@ -573,55 +581,55 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(modsCount > 0) {
 			Assert(moddedEntry != Null);
 
-			printf("\nTask \"%s\" modified, updated ", taskString == Null ? moddedEntry->task : previousString);
-
+			const char* outputString = Concatenate(3, "Task \"", taskString == Null ? moddedEntry->task : previousString, "\" modified, updated ");
+			
 			if(taskString != Null) {
-				printf("task text");
+				outputString = Concatenate(2, outputString, "task text");
 				modsCount -= 1;
 				if(modsCount > 0)
-					printf(" & ");
+					outputString = Concatenate(2, outputString, " & ");
 			}
 
 			if(dateDue != Null) {
-				printf("date due");
+				outputString = Concatenate(2, outputString, "date due");
 				modsCount -= 1;
 				if(modsCount > 0)
-					printf(" & ");
+					outputString = Concatenate(2, outputString, " & ");
 			}
 
 			if(AnyTagsPresent((char**)tags) == true)
-				printf("tags");
-
-			printf("\n");
+				outputString = Concatenate(2, outputString, "tags");
+			
+			outputString = Concatenate(2, outputString, "\n");
+			printf("\n%s", outputString);
 
 			PrintDetailedTask(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
 			SaveTodosFile(todoList, dataPath);
+			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
 		SaveTodosFileBackup(todoList, dataPath);
 
 		Assert(id != Null);
-		guid ID = StringToInt(id, Null);
-		TodoEntriesLoop(todoList) {
-			auto* entry = GetTodosEntry(todoList, it);
-			if(entry->ID == ID) {
-				char* taskString = AllocateString(entry->task, Null);
-
-				ClearMemory(entry, sizeof(todoListEntry));
-				void* dataStart = entry + 1;
-				void* dataEnd = (ui8*)todoList.memory + todoList.size;
-				if(dataStart != dataEnd) { // Would be the case for the very last entry
-					CopyMemory(dataStart, (ui32)((ui8*)dataEnd - (ui8*)dataStart), (void*)entry);
-					ClearMemory((void*)((ui8*)dataEnd - sizeof(todoListEntry)), sizeof(todoListEntry));
-				}
-				todoList.size -= sizeof(todoListEntry);
-
-				printf("\nTodo \"%s\" deleted\n", taskString);
-				SaveTodosFile(todoList, dataPath);
-
-				break;
+		auto* entry = FindEntry(id, todoList);
+		if(entry != Null) {
+			char* taskString = AllocateString(entry->task, Null);
+			
+			ClearMemory(entry, sizeof(todoListEntry));
+			void* dataStart = entry + 1;
+			void* dataEnd = (ui8*)todoList.memory + todoList.size;
+			if(dataStart != dataEnd) { // Would be the case for the very last entry
+			  CopyMemory(dataStart, (ui32)((ui8*)dataEnd - (ui8*)dataStart), (void*)entry);
+				ClearMemory((void*)((ui8*)dataEnd - sizeof(todoListEntry)), sizeof(todoListEntry));
 			}
+			todoList.size -= sizeof(todoListEntry);
+
+			const char* outputString = Concatenate(3, "Todo \"", taskString, "\" deleted\n");
+			printf("\n%s", outputString);
+			SaveTodosFile(todoList, dataPath);
+			
+			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Undo]) == true) {

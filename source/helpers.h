@@ -35,6 +35,9 @@ program_unique BeginEnum(ValidArgumentsIndex) { ID, TaskString, DateAdded, DateD
 
 si32 GetDaysOffsetFromToday(const char* targetDate);
 
+#include "apad_memory.h"
+todoListEntry* FindEntry(const char* id, memory_stack& todoList);
+
 bool IsValidChar(char c);
 bool AnyTagsPresent(char** tags);
 bool TagIsValid(const char* tag);
@@ -47,5 +50,6 @@ void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDu
 char* GetBackupTodosFilePath(const char* filePath);
 void  SaveTodosFile(memory_stack& todoList, const char* dataPath);
 void  SaveTodosFileBackup(memory_stack& todoList, const char* dataPath);
+void 	UpdateLogFile(const char* string, memory_stack& logFile, const char* path);
 
 #endif

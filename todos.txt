@@ -9,7 +9,6 @@ Core commands
 	- List
 		- Sorting! Need special arguments
 		- Printing tasks 'wide'
-	- Undo - undo the undo! Keep a separate files, then delete
 		
 Dates
 	- Checking whether it actually exists. E.g. 30th February
@@ -19,6 +18,6 @@ Todos file
 	- Daily local backup at the start of the day?
 		- Limit to 10 days
 	
-Log file
-	- Changes made that day
-		- Timestamp, ID, list of changes	
+Log file @WIP	
+	- Find a way to trim the log file - keep the last x days worth of entries / commands
+	- Testbench run pollutes the log file - remove / avoid
