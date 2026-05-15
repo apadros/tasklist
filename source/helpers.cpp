@@ -131,7 +131,7 @@ si32 GetDaysOffsetFromToday(const char* targetDate) {
 	auto targetDueTime = mktime(&targetDateCSL);
 		
 	auto diffSecs = difftime(targetDueTime, todayTime);
-	si32 diffDays = diffSecs /60 / 60 / 24;
+	si32 diffDays = diffSecs / 60 / 60 / 24;
 	return diffDays;	
 }
 

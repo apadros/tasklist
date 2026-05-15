@@ -342,6 +342,45 @@ ConsoleAppEntryPoint(args, argsCount) {
 			FreeLine(line);
 		}
 	}
+	
+	// Open the log file
+	{
+		char* path = AllocateString(dataPath, Null);
+		char* fileNameStart = (char*)GetFileNameAndExtension(path);
+		*(fileNameStart)= '\0';
+		const char* extension = GetFileExtension(dataPath);
+		path = Concatenate(3, path, "log.", extension);
+		
+		// Store time, command and changes of last x commands
+		
+		// Extract the ocntents of previous log entries and store in current log
+		memory_stack log = AllocateStack();
+		if(FileExists(path) == true) {
+			file file = LoadFile(path);	
+			Push(file.memory, file.size, log);
+			FreeFile(file);
+		}
+		
+		// Search through file for today's date header. If not found, add it
+		char* eof = PushString("\0", false, log);
+		auto todayStringHeader = Concatenate(3, "\n# ", DateToString(GetDate(0)), " #");
+		if(FindSubstring(todayStringHeader, (const char*)log.memory) == Null) {
+			*eof = '\n';
+			PushString(todayStringHeader, false, log);
+			PushString("\n", false, log);
+		}
+		
+		// Add time
+		PushString(GetTimeNow(), false, log);
+		PushString(" ", false, log);
+		
+		// Push arguments
+		FromTo(0, argsCount)
+			PushString(Concatenate(2, args[it], " "), false, log); 
+		PushString("\n", false, log);
+		
+		SaveFile(log.memory, log.size, path);
+	}
 
 	// Parse command, output error message if invalid
 	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Add]) == true) {
@@ -592,6 +631,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		Assert(IsValid(backupFile) == true);
 		SaveFile(backupFile.memory, backupFile.size, dataPath);
 		printf("\nTodos file replaced with backup\n", GetBackupTodosFilePath(dataPath));
+		FreeFile(backupFile);
 	}
 	else
 		PrintErrorExit("Invalid command supplied.");

@@ -51,6 +51,7 @@ dll_import const char* FindSubstring(const char* sub, const char* string);
 dll_import 			 void  FreeString(char* string);
 								 			 // Will return the length wihtout the null-character
 dll_import 			 ui16  GetStringLength(const char* s);
+dll_import 			 char* PushString(const char* string, bool addEOS, memory_block& stack);
 dll_import 			 bool  StringIsEqualToAny(const char* string, const char** strings, ui8 count);
 dll_import 			 bool  StringsAreEqual(const char* s1, const char* s2);
 

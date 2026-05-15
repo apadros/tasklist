@@ -25,6 +25,7 @@ dll_import bool  IsDateAndValid(const char* s);
 dll_import date  StringToDate(const char* s); // IsDate() should always be called before this
 
 typedef ui64 time_marker;
+dll_export char* 			 GetTimeNow(); // Returns string with format hh:mm:ss
 dll_import time_marker GetTimeMarker();
 dll_import f32 			   GetTimeElapsedMilli(time_marker markerStart, time_marker markerEnd);
 
