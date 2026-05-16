@@ -33,7 +33,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "list", "all" };
+		char* debugArgs[] = { args[0], "undo" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -370,8 +370,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		
 		// Search through file for today's date header. If not found, add it
-		char* eof = PushString("\0", false, logFile);
-		char* todayStringHeader = Concatenate(3, "\n# ", DateToString(GetDate(0)), " #");
+		char* eof = PushString("", true, logFile);
+		char* todayStringHeader = Concatenate(3, "# ", DateToString(GetDate(0)), " #");
 		if(FindSubstring(todayStringHeader, (const char*)logFile.memory) == Null) {
 			*eof = '\n';
 			PushString(todayStringHeader, false, logFile);
@@ -381,7 +381,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			logFile.size -= 1;
 		
 		// Add time
-		const char* string = Concatenate(3, "\n", GetTimeNow(), " ");
+		const char* string = Concatenate(2, GetTimeNow(), " ");
 		
 		// Push arguments
 		FromTo(0, argsCount)
@@ -600,12 +600,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(AnyTagsPresent((char**)tags) == true)
 				outputString = Concatenate(2, outputString, "tags");
 			
-			outputString = Concatenate(2, outputString, "\n");
-			printf("\n%s", outputString);
+			printf("\n%s\n", outputString);
 
 			PrintDetailedTask(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
 			SaveTodosFile(todoList, dataPath);
-			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
+			UpdateLogFile(Concatenate(3, "- ", outputString, "\n"), logFile, logFilePath);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
@@ -625,11 +624,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 			}
 			todoList.size -= sizeof(todoListEntry);
 
-			const char* outputString = Concatenate(3, "Todo \"", taskString, "\" deleted\n");
-			printf("\n%s", outputString);
+			const char* outputString = Concatenate(3, "Todo \"", taskString, "\" deleted");
+			printf("\n%s\n", outputString);
 			SaveTodosFile(todoList, dataPath);
 			
-			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
+			UpdateLogFile(Concatenate(3, "- ", outputString, "\n"), logFile, logFilePath);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Undo]) == true) {
@@ -640,6 +639,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		SaveFile(backupFile.memory, backupFile.size, dataPath);
 		printf("\nTodos file replaced with backup\n", GetBackupTodosFilePath(dataPath));
 		FreeFile(backupFile);
+		UpdateLogFile("\n", logFile, logFilePath);
 	}
 	else
 		PrintErrorExit("Invalid command supplied.");

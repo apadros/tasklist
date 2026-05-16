@@ -73,6 +73,13 @@ void ExitFunction() {
 	system("copy ..\\..\\data\\todos_testbench_backup.txt ..\\..\\data\\todos.txt /y >> testbench_log.txt");
 	// system("del ..\\..\\data\\todos_testbench_backup.txt");
 	
+	// Restore todos log
+	if(FileExists("..\\..\\data\\log.txt") == true) {
+		PrintLogNewline();
+		PrintToLog("Restoring log.txt...");
+		system("copy ..\\..\\data\\log_testbench_backup.txt ..\\..\\data\\log.txt /y >> testbench_log.txt");
+	}
+	
 	PrintLogNewline();
 	PrintToLog("Log end");
 	system("del temp.txt /q");
@@ -86,16 +93,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 	SetDisplayAPIAssertions(true);
 	SetCallExitInAPIAssertions(true);
 	
-	// Open log file
+	// Open testbench log file
 	system("echo Log start > testbench_log.txt");
 	PrintLogNewline();
 	
-	// Backup and reset todos.txt
+	
+	// Backup and todos.txt and log.txt, reset todos.txt
 	PrintToLog("Backing up todos.txt...");
 	system("copy ..\\..\\data\\todos.txt ..\\..\\data\\todos_testbench_backup.txt >> testbench_log.txt");
 	PrintLogNewline();
 	RegisterExitFunction(ExitFunction); // No matter what happens, the original will be restored and cleanup will be carried out
 	system("del ..\\..\\data\\todos.txt /q");
+	if(FileExists("..\\..\\data\\log.txt") == true) {
+		PrintToLog("Backing up log.txt...");
+		system("copy ..\\..\\data\\log.txt ..\\..\\data\\log_testbench_backup.txt /y >> testbench_log.txt");
+	}
 	
 	// Run testbench
 	printf("\nRunning testbench...");

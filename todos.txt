@@ -20,4 +20,3 @@ Todos file
 	
 Log file @WIP	
 	- Find a way to trim the log file - keep the last x days worth of entries / commands
-	- Testbench run pollutes the log file - remove / avoid
