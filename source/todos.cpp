@@ -33,7 +33,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "undo" };
+		char* debugArgs[] = { args[0], "list", "-id", "1" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -63,6 +63,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	const char* 	   dateDue = Null;
 	const char* 	   tags[MaxTags] = { Null };
 	const char* 	   specialOption = Null;
+	bool 						 printHorizontal = false;
 
 	// Parse and check command
 	command = args[1];
@@ -126,10 +127,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 	FromTo(2, argsCount) {
 		const char* arg = args[it];
 
-		if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && (StringsAreEqual(arg, "all") == true || StringsAreEqual(arg, "alltags") == true)) {
+		if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && (StringsAreEqual(arg, "all") == true || StringsAreEqual(arg, "alltags") == true))
 			specialOption = arg;
-			break;
-		}
+		else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && StringsAreEqual(arg, "printhor") == true)
+			printHorizontal = true;
 		else if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true && IsNumber((char*)arg) == true) { // Skip the -id when deleting a todo
 			id = arg;
 			break;
@@ -338,6 +339,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		DisplayCommandOptions(true, true, true, true, true);
 		printf("    all                                                      list all todos\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		printf("    alltags                                                  list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    printhor                                                 print the results horizontally (only valid with all or if printing several tasks)\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true && (id == Null || argsCount < 6)) {
@@ -415,20 +417,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		CopyMemory(tags, sizeof(tags), entry->tags);
 		printf("\nTask added\n");
-		PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
+		PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
 
 		SaveTodosFile(todoList, dataPath);
 
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true) {
-		if(specialOption != Null && StringsAreEqual(specialOption, "all") == true) { // Print all
-			TodoEntriesLoop(todoList) {
-				auto* entry = GetTodosEntry(todoList, it);
-				PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-			}
-		}
-		else if(specialOption != Null && StringsAreEqual(specialOption, "alltags") == true) { // Print all tags
+		if(specialOption != Null && StringsAreEqual(specialOption, "alltags") == true) { // Print all tags
 			auto printedTags = AllocateStack();
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
@@ -457,32 +453,38 @@ ConsoleAppEntryPoint(args, argsCount) {
 			FreeStack(printedTags);
 		}
 		else {
+			auto entriesToPrint = AllocateStack();
+			
 			guid ID = 0;
 			if(id != Null)
 				ID = StringToInt(id, Null);
 
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
-				bool printed = false;
-
-				if(id != Null && ID == entry->ID) {
-					PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-					printed = true;
+				
+				if(specialOption != Null && StringsAreEqual(specialOption, "all") == true) { // Print all
+					Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+					continue;
 				}
 
-				if(printed == false && taskString != Null) {
+				if(id != Null && ID == entry->ID) {
+					Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+					continue;
+				}
+
+				if(taskString != Null) {
 					ConvertStringToLowerCase(taskString);
 
 					auto entryTaskString = AllocateString(entry->task, Null);
 					ConvertStringToLowerCase(entryTaskString);
 
 					if(FindSubstring(taskString, entryTaskString) != Null) {
-						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-						printed = true;
+						Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+						continue;
 					}
 				}
 
-				if(printed == false && dateAdded != Null) {
+				if(dateAdded != Null) {
 					auto targetDate = StringToDate(dateAdded);
 					Assert(sizeof(targetDate.day) == sizeof(ui8));
 					Assert(sizeof(targetDate.month) == sizeof(ui8));
@@ -498,12 +500,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 						 dateAddedLogic == date_logic::GT && entryDateTogether > targetDateTogether ||
 						 dateAddedLogic == date_logic::GTE && entryDateTogether >= targetDateTogether)
 					{
-						PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
-						printed = true;	 
+						Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+						continue;
 					}	
 				}
 
-				if(printed == false && dateDue != Null) {
+				if(dateDue != Null) {
 					auto targetDate = StringToDate(dateDue);
 					Assert(sizeof(targetDate.day) == sizeof(ui8));
 					Assert(sizeof(targetDate.month) == sizeof(ui8));
@@ -519,23 +521,107 @@ ConsoleAppEntryPoint(args, argsCount) {
 						 dateDueLogic == date_logic::GT && entryDateTogether > targetDateTogether ||
 						 dateDueLogic == date_logic::GTE && entryDateTogether >= targetDateTogether)
 					{
-						PrintDetailedTask(entry->ID, entry->task, entry->dateDue, entry->dateDue, (char**)entry->tags);
-						printed = true;	 
+						Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+						continue;	 
 					}
 				}
 
-				if(printed == false) {
-					ForAll(MaxTags) {
-						const char* tag = tags[it];
-						if(TagIsValid(tag) == true) {
-							ForAll(MaxTags) {
-								if(TagIsValid(entry->tags[it]) == true && StringsAreEqual(tag, entry->tags[it]) == true)
-									PrintDetailedTask(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
+				ForAll(MaxTags) {
+					const char* tag = tags[it];
+					if(TagIsValid(tag) == true) {
+						ForAll(MaxTags) {
+							if(TagIsValid(entry->tags[it]) == true && StringsAreEqual(tag, entry->tags[it]) == true) {
+								Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+								continue;
 							}
 						}
 					}
 				}
 			}
+			
+			if(entriesToPrint.size != 0) {
+				ui8 count = entriesToPrint.size / sizeof(todoListEntry*);
+				
+				// Determine length of tasks string column
+				ui16 taskColumnLength = 4; // Size of "Task" in header without spaces
+				ForAll(count) {
+					auto* entry = ((todoListEntry**)entriesToPrint.memory)[it];
+					auto length = GetStringLength(entry->task);
+					if(length > taskColumnLength)
+						taskColumnLength = length;
+				}
+				
+				// Print header for horizontal print
+				if(entriesToPrint.size >= sizeof(todoListEntry*) * 2 && printHorizontal == true) {
+					printf("\n  ID | Task ");
+					if(taskColumnLength > 4) {
+						ForAll(taskColumnLength - 4)
+							printf(" ");
+					}
+					printf("| Date Added | Date Due   | Tags\n");
+					
+					// Print horizontal separator
+					printf("============");
+					ForAll(taskColumnLength - 4)
+						printf("=");
+					printf("=================================\n");
+				}
+				
+				// @WIP - Finish testing all of this
+				
+				ForAll(count) {
+					auto* entry = ((todoListEntry**)entriesToPrint.memory)[it];
+					if(entriesToPrint.size >= sizeof(todoListEntry*) * 2 && printHorizontal == true) { // Print task horizontally
+						// ID
+						Assert(entry->ID <= 999);
+						if(entry->ID <= 9)
+							printf("   %i ", entry->ID);
+						else if(entry->ID <= 99)
+							printf("  %i ", entry->ID);
+						else
+							printf(" %i ", entry->ID);
+						printf("|");
+						
+						// Print task string
+						{
+							printf(" %s ", entry->task);
+							auto length = GetStringLength(entry->task);
+							auto diff = Magnitude(length - taskColumnLength);
+							ForAll(diff)
+								printf(" ");
+						}
+						
+						printf("| %s |", entry->dateAdded);
+						
+						// dateDue
+						if(entry->dateDue == Null)
+							printf("      -     ");
+						else
+							printf(" %s ", entry->dateDue);
+						printf("|");
+						
+						// tags
+						if(AnyTagsPresent(entry->tags) == true) {
+							ForAll(MaxTags) {
+								if(TagIsValid(entry->tags[it]) == true)
+									printf(it == 0 ? " %s" : ", %s", entry->tags[it]);
+							}
+						}
+						else
+							printf(" - ");
+						printf("\n");
+						
+						// Print horizontal separator
+						printf("------------");
+						ForAll(taskColumnLength - 4)
+							printf("-");
+						printf("---------------------------------\n");
+					}
+					else
+						PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);	
+				}
+			}
+			FreeStack(entriesToPrint);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true) {
@@ -602,7 +688,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			
 			printf("\n%s\n", outputString);
 
-			PrintDetailedTask(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
+			PrintTaskVertical(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
 			SaveTodosFile(todoList, dataPath);
 			UpdateLogFile(Concatenate(3, "- ", outputString, "\n"), logFile, logFilePath);
 		}

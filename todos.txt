@@ -4,11 +4,13 @@ Key
 	
 Misc
 	- Various @TODO in code files
+	- Test release build
+	- Add printing horizontally to testbench @PRIORITY
 	
 Core commands
 	- List
 		- Sorting! Need special arguments
-		- Printing tasks 'wide'
+		- Printing tasks 'wide' @WIP
 		
 Dates
 	- Checking whether it actually exists. E.g. 30th February
@@ -18,5 +20,5 @@ Todos file
 	- Daily local backup at the start of the day?
 		- Limit to 10 days
 	
-Log file @WIP	
+Log file
 	- Find a way to trim the log file - keep the last x days worth of entries / commands
