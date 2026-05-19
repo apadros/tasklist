@@ -375,12 +375,11 @@ ConsoleAppEntryPoint(args, argsCount) {
 		char* eof = PushString("", true, logFile);
 		char* todayStringHeader = Concatenate(3, "# ", DateToString(GetDate(0)), " #");
 		if(FindSubstring(todayStringHeader, (const char*)logFile.memory) == Null) {
-			*eof = '\n';
+			PushString("\n", false, logFile);
 			PushString(todayStringHeader, false, logFile);
 			PushString("\n", false, logFile);
 		} 
-		else
-			logFile.size -= 1;
+		*eof = '\n'; // This must happen in both cases
 		
 		// Add time
 		const char* string = Concatenate(2, GetTimeNow(), " ");
@@ -690,7 +689,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 			PrintTaskVertical(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
 			SaveTodosFile(todoList, dataPath);
-			UpdateLogFile(Concatenate(3, "- ", outputString, "\n"), logFile, logFilePath);
+			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true) {
@@ -714,7 +713,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			printf("\n%s\n", outputString);
 			SaveTodosFile(todoList, dataPath);
 			
-			UpdateLogFile(Concatenate(3, "- ", outputString, "\n"), logFile, logFilePath);
+			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
 		}
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Undo]) == true) {
@@ -725,7 +724,6 @@ ConsoleAppEntryPoint(args, argsCount) {
 		SaveFile(backupFile.memory, backupFile.size, dataPath);
 		printf("\nTodos file replaced with backup\n", GetBackupTodosFilePath(dataPath));
 		FreeFile(backupFile);
-		UpdateLogFile("\n", logFile, logFilePath);
 	}
 	else
 		PrintErrorExit("Invalid command supplied.");
