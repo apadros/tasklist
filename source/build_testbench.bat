@@ -13,10 +13,10 @@ echo:
 copy ..\..\apad_api_lib64\*debug.* .
 
 echo:
-cl /I..\..\apad_api_lib64 /std:c++17 /w /nologo /Od /Zi ..\testbench.cpp /link *debug*.lib
+cl /I..\..\apad_api_lib64 /std:c++17 /w /nologo /Od /Zi /Fe: run_testbench.exe ..\testbench.cpp /link *debug*.lib
 
-del testbench.obj
-del testbench.ilk
+del *testbench*.obj
+del *testbench*.ilk
 del temp.txt
 
 echo:

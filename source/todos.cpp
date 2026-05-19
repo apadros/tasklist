@@ -566,8 +566,6 @@ ConsoleAppEntryPoint(args, argsCount) {
 					printf("=================================\n");
 				}
 				
-				// @WIP - Finish testing all of this
-				
 				ForAll(count) {
 					auto* entry = ((todoListEntry**)entriesToPrint.memory)[it];
 					if(entriesToPrint.size >= sizeof(todoListEntry*) * 2 && printHorizontal == true) { // Print task horizontally

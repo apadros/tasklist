@@ -5,12 +5,10 @@ Key
 Misc
 	- Various @TODO in code files
 	- Test release build
-	- Add printing horizontally to testbench @PRIORITY
 	
 Core commands
 	- List
 		- Sorting! Need special arguments
-		- Printing tasks 'wide' @WIP
 		
 Dates
 	- Checking whether it actually exists. E.g. 30th February

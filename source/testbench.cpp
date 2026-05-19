@@ -184,75 +184,91 @@ ConsoleAppEntryPoint(args, argsCount) {
 	if(comparison == false)
 		goto program_exit;
 	
-	// List
+	// List vertically and horizontally
 	PrintLogNewline();
-	PrintToLog("Running list command...");
-	system("del temp.txt");
-	commands[0] = "todos list all";
-	PrintLogNewline();
-	CarryOutCommands(commands, 1);
-	auto daysOffset = GetDaysOffsetFromToday("10/06/2026");
-	const char* targetOutput = Concatenate(6, "\r\n"
-																						"  ID:         1\r\n"
-																						"  String:     modded string\r\n",
-														 Concatenate(3, "  Date added: ", todayString, "\r\n"),
-														 Concatenate(4, "  Date due:   10/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")\r\n"),
-																						"  Tags:       tag 2\r\n"
-																						"              new tag\r\n"
-																						"\r\n"
-																						"  ID:         2\r\n"
-																						"  String:     task number 4\r\n",
-														 Concatenate(3, "  Date added: ", todayString, "\r\n"),
-																						"  Date due:   -\r\n"
-																						"  Tags:       tag3\r\n"
-																						"\r\n");
-	// Run custom comparison
-	{
-		auto tempFile = LoadFile("temp.txt");
-		const char* tempContents = (const char*)tempFile.memory;
-		
-		if(StringsAreEqual(tempContents, targetOutput) == false) {
-			printf("failed\n");
-			PrintLogNewline();
-			PrintToLog("Test failed");
+	PrintToLog("Running list commands...");
+	ForAll(2) {
+		system("del temp.txt");
+		if(it == 0)
+			commands[0] = "todos list all";
+		else
+			commands[0] = "todos list all printhor";
+		PrintLogNewline();
+		CarryOutCommands(commands, 1);
+		auto daysOffset = GetDaysOffsetFromToday("10/06/2026");
+		const char* targetOutput = Null;
+		if(it == 0)
+			targetOutput = Concatenate(6, "\r\n"
+																		"  ID:         1\r\n"
+																		"  String:     modded string\r\n",
+										 Concatenate(3, "  Date added: ", todayString, "\r\n"),
+										 Concatenate(4, "  Date due:   10/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")\r\n"),
+																		"  Tags:       tag 2\r\n"
+																		"              new tag\r\n"
+																		"\r\n"
+																		"  ID:         2\r\n"
+																		"  String:     task number 4\r\n",
+										 Concatenate(3, "  Date added: ", todayString, "\r\n"),
+																		"  Date due:   -\r\n"
+																		"  Tags:       tag3\r\n"
+																		"\r\n");
+		else
+			targetOutput = Concatenate(5, "\r\n"
+																		"  ID | Task          | Date Added | Date Due   | Tags\r\n"
+																		"======================================================\r\n"
+																		"   1 | modded string | ", Concatenate(2, todayString, " | 10/06/2026 | tag 2, new tag\r\n"),
+																		"------------------------------------------------------\r\n"
+																		"   2 | task number 4 | ", Concatenate(2, todayString, " |      -     | tag3\r\n"),
+																		"------------------------------------------------------\r\n"
+																		"\r\n");	
+		// Run custom comparison
+		{
+			auto tempFile = LoadFile("temp.txt");
+			const char* tempContents = (const char*)tempFile.memory;
 			
-			char* target = Concatenate(2, "Target: ", targetOutput);
-			auto  targetLength = GetStringLength(target);
-			FromTo(1, targetLength) { // Process to remove excess spaces, newlines and carriage returns
-			  char* c = target + it;
-				if(*c == ' ' || *c == '\r' || *c == '\n') { 
-					*c = ' ';
-					if(*(c - 1) == ' ') { // Shift back by 1
-						ui16 start = it;
-						FromTo(start, targetLength) // Shift back the rest
-							target[it] = target[it + 1];
-						targetLength -= 1;
-						it -= 1; // To check the newly moved char
+			if(StringsAreEqual(tempContents, targetOutput) == false) {
+				printf("failed\n");
+				PrintLogNewline();
+				PrintToLog("Test failed");
+				
+				char* target = Concatenate(2, "Target: ", targetOutput);
+				auto  targetLength = GetStringLength(target);
+				FromTo(1, targetLength) { // Process to remove excess spaces, newlines and carriage returns
+					char* c = target + it;
+					if(*c == ' ' || *c == '\r' || *c == '\n') { 
+						*c = ' ';
+						if(*(c - 1) == ' ') { // Shift back by 1
+							ui16 start = it;
+							FromTo(start, targetLength) // Shift back the rest
+								target[it] = target[it + 1];
+							targetLength -= 1;
+							it -= 1; // To check the newly moved char
+						}
 					}
 				}
-			}
-			char* actual = Concatenate(2, "Actual: ", tempContents);
-			auto  actualLength = GetStringLength(actual);
-			FromTo(1, actualLength) { // Process to remove excess spaces, newlines and carriage returns
-			  char* c = actual + it;
-				if(*c == ' ' || *c == '\r' || *c == '\n') { 
-					*c = ' ';
-					if(*(c - 1) == ' ') { // Shift back by 1
-						ui16 start = it;
-						FromTo(start, actualLength) // Shift back the rest
-							actual[it] = actual[it + 1];
-						actualLength -= 1;
-						it -= 1; // To check the newly moved char
+				char* actual = Concatenate(2, "Actual: ", tempContents);
+				auto  actualLength = GetStringLength(actual);
+				FromTo(1, actualLength) { // Process to remove excess spaces, newlines and carriage returns
+					char* c = actual + it;
+					if(*c == ' ' || *c == '\r' || *c == '\n') { 
+						*c = ' ';
+						if(*(c - 1) == ' ') { // Shift back by 1
+							ui16 start = it;
+							FromTo(start, actualLength) // Shift back the rest
+								actual[it] = actual[it + 1];
+							actualLength -= 1;
+							it -= 1; // To check the newly moved char
+						}
 					}
 				}
+				PrintToLog(target);
+				PrintToLog(actual);
+				FreeFile(tempFile);
+				goto program_exit;
 			}
-			PrintToLog(target);
-			PrintToLog(actual);
+			
 			FreeFile(tempFile);
-			goto program_exit;
 		}
-		
-		FreeFile(tempFile);
 	}
 	
 	printf("passed\n");
