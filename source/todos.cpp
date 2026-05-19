@@ -289,7 +289,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		DisplayCommandOptions(true, true, true, true, true);
 		printf("    all                                                      list all todos\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		printf("    alltags                                                  list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
-		printf("    printhor                                                 print the results horizontally (only valid with all or if printing several tasks)\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    printhor                                                 print the results horizontally (only valid with 'all' or if printing several tasks, must be the last argument)\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true && (id == Null || argsCount < 6)) {
@@ -507,13 +507,13 @@ ConsoleAppEntryPoint(args, argsCount) {
 						ForAll(taskColumnLength - 4)
 							printf(" ");
 					}
-					printf("| Date Added | Date Due   | Tags\n");
+					printf("| Date Added | Date Due          | Tags\n");
 					
 					// Print horizontal separator
 					printf("============");
 					ForAll(taskColumnLength - 4)
 						printf("=");
-					printf("=================================\n");
+					printf("=========================================\n");
 				}
 				
 				ForAll(count) {
@@ -542,10 +542,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 						
 						// dateDue
 						if(entry->dateDue == Null)
-							printf("      -     ");
-						else
+							printf("         -        ");
+						else {
 							printf(" %s ", entry->dateDue);
-						printf("|");
+							si32 diffDays = GetDaysOffsetFromToday(entry->dateDue);
+							if(diffDays > 0)
+								printf("(+%i)", diffDays);
+							else
+								printf("(%i)", diffDays);
+							
+							if(Magnitude(diffDays) <= 99)
+								printf(" ");
+							if(Magnitude(diffDays) < 9)
+								printf(" ");
+						}
+						printf(" |");
 						
 						// tags
 						if(AnyTagsPresent(entry->tags) == true) {
@@ -562,7 +573,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						printf("------------");
 						ForAll(taskColumnLength - 4)
 							printf("-");
-						printf("---------------------------------\n");
+						printf("-----------------------------------------\n");
 					}
 					else
 						PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);	

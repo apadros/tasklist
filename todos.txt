@@ -5,6 +5,7 @@ Key
 Misc
 	- Various @TODO in code files
 	- Test release build
+	- Add date due work days check to the testbench
 	
 Core commands
 	- List

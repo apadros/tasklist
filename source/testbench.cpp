@@ -3,6 +3,7 @@
 #include "apad_array.h"
 #include "apad_error.h"
 #include "apad_file.h"
+#include "apad_maths.h"
 #include "apad_string.h"
 #include "apad_time.h"
 #include "apad_win32.h"
@@ -212,15 +213,23 @@ ConsoleAppEntryPoint(args, argsCount) {
 																		"  Date due:   -\r\n"
 																		"  Tags:       tag3\r\n"
 																		"\r\n");
-		else
+		else {
+			const char* dateDueString = Concatenate(4, "10/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")");
+			si32 diffDays = GetDaysOffsetFromToday("10/06/2026");
+			if(Magnitude(diffDays) <= 99)
+				dateDueString = Concatenate(2, dateDueString, " ");
+			if(Magnitude(diffDays) < 9)
+				dateDueString = Concatenate(2, dateDueString, "  ");
+			
 			targetOutput = Concatenate(5, "\r\n"
-																		"  ID | Task          | Date Added | Date Due   | Tags\r\n"
-																		"======================================================\r\n"
-																		"   1 | modded string | ", Concatenate(2, todayString, " | 10/06/2026 | tag 2, new tag\r\n"),
-																		"------------------------------------------------------\r\n"
-																		"   2 | task number 4 | ", Concatenate(2, todayString, " |      -     | tag3\r\n"),
-																		"------------------------------------------------------\r\n"
+																		"  ID | Task          | Date Added | Date Due          | Tags\r\n"
+																		"==============================================================\r\n" 
+																		"   1 | modded string | ", Concatenate(3, todayString, " | ", dateDueString), " | tag 2, new tag\r\n"
+																		"--------------------------------------------------------------\r\n"
+																		"   2 | task number 4 | ", Concatenate(2, todayString, " |         -         | tag3\r\n"),
+																		"--------------------------------------------------------------\r\n"
 																		"\r\n");	
+		}
 		// Run custom comparison
 		{
 			auto tempFile = LoadFile("temp.txt");
