@@ -67,7 +67,7 @@ void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDu
 	if(dateAdded == true)
 		printf("    %s [< | <= | > | >=][dd/mm | dd/mm/yyyy][[+ | -]<days>] date added\n", (const char*)ValidArguments[ValidArgumentsIndex::DateAdded]);
 	if(dateDue == true)
-		printf("    %s [< | <= | > | >=][dd/mm | dd/mm/yyyy][[+ | -]<days>] date due\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
+		printf("    %s [< | <= | > | >=][dd/mm | dd/mm/yyyy][[+ | -]<days>] date due, use of operators requires quotation marks around all of it (e.g. \"<date\")\n", (const char*)ValidArguments[ValidArgumentsIndex::DateDue]);
 	if(tags == true)
 		printf("    [[%s [<tags> | \"\"]] | [%s<1-5> [<tag> | \"\"]]]            string tags (up to 5) or %s(number 1 to 5) to set a specific tag or \"\" to remove a tag\n", (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric], (const char*)ValidArguments[ValidArgumentsIndex::TagsGeneric]);
 }

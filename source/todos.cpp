@@ -33,7 +33,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "list", "-id", "1" };
+		char* debugArgs[] = { args[0], "add", "-s", "sample task", "-dd", "today-8" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -180,7 +180,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			it += 1;
 			CheckArgsExit();
 
-			const char* temp = args[it];
+			char* temp = AllocateString(args[it], Null);
 			if(temp[0] == '<' || temp[0] == '>') {
 				if(temp[0] == '<')
 					dateDueLogic = date_logic::LT;
@@ -198,9 +198,31 @@ ConsoleAppEntryPoint(args, argsCount) {
 					dateDueLogic = date_logic::GTE;
 				temp += 1;
 			}
-
-			if(IsDateAndValid(temp) == true)
+			
+			bool  workDays = temp[GetStringLength(temp) - 1] == 'w';
+			char* sign = (char*)FindSubstring("+", temp);
+			if(sign == Null)
+				sign = (char*)FindSubstring("-", temp);
+			
+			if(workDays == true)
+				temp[GetStringLength(temp) - 1] = '\0';
+			if(IsDateAndValid(temp) == true) {
+				if(sign != Null && workDays == true) {
+					ui16 offset = StringToInt(sign + 1, Null);
+					sign[1] = '\0'; // Cut off the offset
+					FromToInc(1, offset) { // Work out new offset
+						const char* tempString = Concatenate(2, temp, ToString(it));
+						auto 				date = StringToDate(tempString);
+						if(date.dayOfTheWeek >= 6)
+							offset += 1; // Increate the search range
+						sign[1] = '\0';
+					}
+					
+					temp = Concatenate(2, temp, ToString(offset)); // Update the offset
+				}
+				
 				dateDue = DateToString(StringToDate(temp)); // Do this to take into account any modifiers to the date (e.g. logic or offsets) and convert to long format
+			}
 			else
 				PrintErrorExit("Invalid date due specified");
 
@@ -253,79 +275,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			tags[4] = args[it];
 		}
 		else
-			PrintErrorExit("Invalid argument supplied");
-		#if 0 // @TODO - Decide what to do with all of this
-		else if(IsDateAndValid(arg) == true || (arg.length == 1 && arg[0] == '.') || (arg.length >= 2 && arg.length <= 4 && arg[0] == '+')) { // Date
-      if(arg[0] == '.') {
-				if(dateDue.length == 0)
-					dateDue = DateToString(GetDate(0));
-				else {
-					PrintErrorExit("Target date already supplied: %s", (char*)arg);
-					goto program_exit;
-				}
-			}
-			else if(arg[0] == '+') {
-				const char* daysString = arg.chars + 1;
-
-				// Determine validity and whether work days have been specified
-				bool isValid = true;
-				bool workDays = false;
-				{
-					const ui8 MaxDigits = 3;
-
-					const char* workDaysSub = FindSubstring("w", daysString);
-					if(workDaysSub != Null) {
-						workDays = true;
-						workDaysSub = '\0';
-					}
-
-					if(daysString.length == 0 || daysString.length > MaxDigits)
-						isValid = false;
-
-					ForAll(daysString.length) {
-						if(IsNumber(daysString[it]) == false)
-							isValid = false;
-					}
-				}
-				if(isValid == false) {
-					PrintErrorExit("Invalid day offset (max length allowed is 3)");
-					goto program_exit;
-				}
-
-				if(dateDue.length == 0) {
-					ui16 calendarDays = 0;
-					{
-						si32 days = StringToInt(daysString);
-						if(workDays == true) {
-							ForAll(days) {
-								calendarDays += 1;
-								while(GetDate(calendarDays).dayOfTheWeek >= 6) // Weekend
-									calendarDays += 1;
-							}
-						}
-						else
-							calendarDays = days;
-					}
-
-					dateDue = DateToString(GetDate(calendarDays));
-				}
-				else if(reschedulePeriod.length == 0)
-					reschedulePeriod = arg.chars + 1;
-				else {
-					PrintErrorExit("Reschedule period already supplied", (char*)arg);
-					goto program_exit;
-				}
-			}
-			else {
-				if(dateDue.length == 0)
-					dateDue = DateToString(StringToDate(arg)); // Conversion back and forth to set the standard date format dd/mm/yyyy
-				else {
-					PrintErrorExit("Target date already supplied", arg);
-					goto program_exit;
-				}
-			}
-		}
-		#endif
+			PrintErrorExit("Invalid argument supplied");	
 	}
 
 	// Check command arguments and possibly display help message

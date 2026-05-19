@@ -12,7 +12,6 @@ Core commands
 		
 Dates
 	- Checking whether it actually exists. E.g. 30th February
-	- Adding the concept of work days offset[w] - skip Saturdays and Sundays
 			
 Todos file
 	- Daily local backup at the start of the day?
