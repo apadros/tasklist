@@ -33,12 +33,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "add", "-s", "sample task", "-dd", "today-8" };
+		char* debugArgs[] = { args[0], "list" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
 	#endif
-
+	
 	// Initial help message
 	if(argsCount == 1) {
 		printf("\nUsage: %s [<command>] [<options>]\n", args[0]);
@@ -89,6 +89,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#else
 	const char* dataPath = "data/todos.txt";
 	#endif
+	
 	guid guidCounter = 0;
 			 todoList = AllocateStack();
 	{
@@ -98,6 +99,39 @@ ConsoleAppEntryPoint(args, argsCount) {
 		todosFile = LoadFile(dataPath);
 		if(AssertionWasHit() == true)
 			PrintErrorExit("Couldn't load data/todos.txt");
+		
+		// Create backup if required
+		{
+			char* date = DateToString(GetDate(0));
+			date[2] = '_';
+			date[5] = '_';
+			const char* filePath = AllocateString(dataPath, Null);
+			*((char*)(GetFileExtension(filePath) - 1)) = '\0'; // Remove . and extension
+			filePath = Concatenate(5, filePath, "_", date, ".", GetFileExtension(dataPath));
+			if(FileExists(filePath) == false)
+				SaveFile(todosFile, filePath);
+		}
+		
+		// Go back to check for backups more than 10 days old
+		{
+			bool deletedOne = false;
+			FromToInc(-30, -11) {
+				char* date = DateToString(GetDate(it));
+				date[2] = '_';
+				date[5] = '_';
+				const char* filePath = AllocateString(dataPath, Null);
+				*((char*)(GetFileExtension(filePath) - 1)) = '\0'; // Remove . and extension
+				filePath = Concatenate(5, filePath, "_", date, ".", GetFileExtension(dataPath));
+				if(FileExists(filePath) == true) {
+					if(deletedOne == false) {
+						printf("\n");
+						deletedOne = true;
+					}
+					DeleteFile(filePath);
+					printf("Backup file %s deleted\n", filePath);
+				}
+			}
+		}
 
 		// Extract line data
 		LineReadLoopHeader(readIndex, todosFile) {

@@ -19,6 +19,7 @@ dll_import void  Win32FreeMemory(void* mem);
 
 // ******************** Files ********************  //
 
+dll_import void 				Win32DeleteFile(const char* path);
 dll_import bool 				Win32FileExists(const char* path);
 												// Calls Win32FileExists() first, returns if false
 dll_import memory_block Win32LoadFile(const char* path);

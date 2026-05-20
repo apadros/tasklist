@@ -12,7 +12,12 @@ typedef memory_block file;
 
 // ******************** Loading and saving ******************** //
 
-// For some reason can't declase these function pointers as dll_import
+#ifdef DeleteFile // Windows API
+#undef DeleteFile
+#endif
+
+// For some reason can't declare these function pointers as dll_import
+program_unique void 			(*DeleteFile)(const char* path) = Win32DeleteFile; // FileExists() must be called first
 program_unique bool 			(*FileExists)(const char* path) = Win32FileExists;
 program_unique file 			(*LoadFile)(const char* path) = Win32LoadFile; // FileExists() must be called first
 dll_import     void 			  SaveFile(void* data, ui32 dataSize, const char* path); // Will create a new file if it doesn't exist; if it does it'll get replaced.

@@ -1,22 +1,11 @@
 Key
 	@WIP
 	@PRIORITY
-	
-Misc
-	- Various @TODO in code files
-	- Test release build
-	- Add date due work days check to the testbench
-	
-Core commands
-	- List
-		- Sorting! Need special arguments
-		
-Dates
-	- Checking whether it actually exists. E.g. 30th February
-			
-Todos file
-	- Daily local backup at the start of the day?
-		- Limit to 10 days
-	
-Log file
-	- Find a way to trim the log file - keep the last x days worth of entries / commands
+
+- Various @TODO in code files
+- Test release build
+- Once complete, publish new API version?
+- List sorting! Need special arguments
+- Checking whether the provided date actually exist. E.g. 30th February			
+- Add todos file backup creation and deletion to testbench
+- Find a way to trim the log file - keep the last x days worth of entries / commands
