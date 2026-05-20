@@ -108,8 +108,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 			const char* filePath = AllocateString(dataPath, Null);
 			*((char*)(GetFileExtension(filePath) - 1)) = '\0'; // Remove . and extension
 			filePath = Concatenate(5, filePath, "_", date, ".", GetFileExtension(dataPath));
-			if(FileExists(filePath) == false)
+			if(FileExists(filePath) == false) {
 				SaveFile(todosFile, filePath);
+				printf("\n%s backup created\n", filePath);
+			}
 		}
 		
 		// Go back to check for backups more than 10 days old

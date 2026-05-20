@@ -7,5 +7,4 @@ Key
 - Once complete, publish new API version?
 - List sorting! Need special arguments
 - Checking whether the provided date actually exist. E.g. 30th February			
-- Add todos file backup creation and deletion to testbench
 - Find a way to trim the log file - keep the last x days worth of entries / commands

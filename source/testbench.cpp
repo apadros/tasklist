@@ -68,18 +68,13 @@ bool LoadTodosAndCompare(const char** targetFileContent, ui8 length) {
 }
 
 void ExitFunction() {
-	// Restore original todos.txt
+	// Restore originals
 	PrintLogNewline();
-	PrintToLog("Restoring todos.txt...");
-	system("copy ..\\..\\data\\todos_testbench_backup.txt ..\\..\\data\\todos.txt /y >> testbench_log.txt");
-	// system("del ..\\..\\data\\todos_testbench_backup.txt");
-	
-	// Restore todos log
-	if(FileExists("..\\..\\data\\log.txt") == true) {
-		PrintLogNewline();
-		PrintToLog("Restoring log.txt...");
-		system("copy ..\\..\\data\\log_testbench_backup.txt ..\\..\\data\\log.txt /y >> testbench_log.txt");
-	}
+	PrintToLog("Restoring original files...");
+	PrintLogNewline();
+	system("del ..\\..\\data\\todo*.txt /q >> testbench_log.txt");
+	system("copy ..\\..\\data\\testbench_backups\\*.txt ..\\..\\data\\ /y >> testbench_log.txt");
+	system("del ..\\..\\data\\testbench_backups\\* /q >> testbench_log.txt");
 	
 	PrintLogNewline();
 	PrintToLog("Log end");
@@ -94,21 +89,20 @@ ConsoleAppEntryPoint(args, argsCount) {
 	SetDisplayAPIAssertions(true);
 	SetCallExitInAPIAssertions(true);
 	
+	// Create backup folder
+	system("if not exist ..\\..\\data\\testbench_backups (mkdir ..\\..\\data\\testbench_backups) >> testbench_log.txt");
+	system("del ..\\..\\data\\testbench_backups /q >> testbench_log.txt");
+	
 	// Open testbench log file
 	system("echo Log start > testbench_log.txt");
 	PrintLogNewline();
 	
-	
-	// Backup and todos.txt and log.txt, reset todos.txt
-	PrintToLog("Backing up todos.txt...");
-	system("copy ..\\..\\data\\todos.txt ..\\..\\data\\todos_testbench_backup.txt >> testbench_log.txt");
-	PrintLogNewline();
+	// Backup all necessary files and reset todos.txt it
+	PrintToLog("Backing up all files...");
+	system("copy ..\\..\\data\\todos*.txt ..\\..\\data\\testbench_backups\\ >> testbench_log.txt");
+	system("copy ..\\..\\data\\log.txt ..\\..\\data\\testbench_backups\\ >> testbench_log.txt");
 	RegisterExitFunction(ExitFunction); // No matter what happens, the original will be restored and cleanup will be carried out
-	system("del ..\\..\\data\\todos.txt /q");
-	if(FileExists("..\\..\\data\\log.txt") == true) {
-		PrintToLog("Backing up log.txt...");
-		system("copy ..\\..\\data\\log.txt ..\\..\\data\\log_testbench_backup.txt /y >> testbench_log.txt");
-	}
+	system("del ..\\..\\data\\todos.txt /q >> testbench_log.txt");
 	
 	// Run testbench
 	printf("\nRunning testbench...");
@@ -124,7 +118,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		                         "todos add -s \"task number 4\" -t3 tag3"
 														 };	
 	PrintLogNewline();
-	system(Concatenate(3, "echo \"first task\" ", todayString, " 09/05/2026 \"tag 1\"  > ..\\..\\data\\todos.txt")); // Need to add first task manually for now
+	system(Concatenate(3, "echo \"first task\" ", todayString, " 09/05/2026 \"tag 1\" > ..\\..\\data\\todos.txt")); // Need to add first task manually for now
 	PrintToLog(commands[0]);
 	CarryOutCommands(commands + 1, GetArrayLength(commands) - 1);
 	
@@ -137,6 +131,23 @@ ConsoleAppEntryPoint(args, argsCount) {
 	bool comparison = LoadTodosAndCompare(targetFileContents, GetArrayLength(targetFileContents));
 	if(comparison == false)
 		goto program_exit;
+	
+	// Check that the todos_[today].txt file was created
+	{
+		PrintLogNewline();
+		PrintToLog("Checking whether todos_[today].txt file was created...");
+		
+		char* date = DateToString(GetDate(0));
+		date[2] = '_';
+		date[5] = '_';
+		const char* filePath = Concatenate(3, "..\\..\\data\\todos_", date, ".txt");
+		if(FileExists(filePath) == false) {
+			printf("failed\n");
+			PrintLogNewline();
+			PrintToLog("Test failed");
+			goto program_exit;
+		}
+	}			
 	
 	// Test del commands
 	PrintLogNewline();

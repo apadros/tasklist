@@ -9,6 +9,9 @@ copy ..\..\apad_api_lib64\*debug.* .
 
 cl /nologo /w /I..\..\apad_api_lib64 /Fe: todos /Od /Zi /DAPAD_DEBUG /std:c++17 ..\helpers.cpp ..\todos.cpp *debug.lib
 
+del *.ilk
+del *.obj
+
 REM Build rebuild_debug.bat
 echo @echo off > rebuild_todos_debug.bat
 echo: >> rebuild_todos_debug.bat
