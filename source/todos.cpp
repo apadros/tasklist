@@ -541,22 +541,30 @@ ConsoleAppEntryPoint(args, argsCount) {
 						printf("| %s |", entry->dateAdded);
 						
 						// dateDue
-						if(entry->dateDue == Null)
-							printf("         -        ");
-						else {
-							printf(" %s ", entry->dateDue);
-							si32 diffDays = GetDaysOffsetFromToday(entry->dateDue);
-							if(diffDays > 0)
-								printf("(+%i)", diffDays);
-							else
-								printf("(%i)", diffDays);
-							
-							if(Magnitude(diffDays) <= 99)
-								printf(" ");
-							if(Magnitude(diffDays) < 9)
-								printf(" ");
+						{
+							const char* empty = "         -        ";
+							if(entry->dateDue == Null)
+								printf(empty);
+							else {
+								const char* date = Concatenate(3, " ", entry->dateDue, " (");
+								
+								// Add day offset
+								si32 diffDays = GetDaysOffsetFromToday(entry->dateDue);
+								if(diffDays > 0)
+									date = Concatenate(3, date, "+", ToString(diffDays));
+								else
+									date = Concatenate(2, date, ToString(diffDays));
+								date = Concatenate(2, date, ")");
+								printf("%s", date);
+								
+								// Pad the remaining space
+								auto length = GetStringLength(date);
+								auto maxLength = GetStringLength(empty);
+								ForAll(maxLength - length)
+									printf(" ");
+							}
+							printf(" |");
 						}
-						printf(" |");
 						
 						// tags
 						if(AnyTagsPresent(entry->tags) == true) {
