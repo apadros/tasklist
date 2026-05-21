@@ -5,6 +5,6 @@ Key
 - Various @TODO in code files
 - Test release build
 - Once complete, publish new API version?
-- List sorting! Need special arguments
+- Add list sorting by date due to testbench?
 - Checking whether the provided date actually exist. E.g. 30th February			
 - Find a way to trim the log file - keep the last x days worth of entries / commands

@@ -99,9 +99,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 	
 	// Backup all necessary files and reset todos.txt it
 	PrintToLog("Backing up all files...");
+	PrintLogNewline();
 	system("copy ..\\..\\data\\todos*.txt ..\\..\\data\\testbench_backups\\ >> testbench_log.txt");
 	system("copy ..\\..\\data\\log.txt ..\\..\\data\\testbench_backups\\ >> testbench_log.txt");
-	RegisterExitFunction(ExitFunction); // No matter what happens, the original will be restored and cleanup will be carried out
+	RegisterExitFunction(ExitFunction); // No matter what happens, the originals will be restored and cleanup will be carried out
 	system("del ..\\..\\data\\todos.txt /q >> testbench_log.txt");
 	
 	// Run testbench

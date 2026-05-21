@@ -12,6 +12,33 @@
 #include "apad_win32.h"
 #include "helpers.h"
 
+#include <stdlib.h> // For qsort
+int CompareEntriesByDateDue(const void* p1, const void* p2) {
+	auto* e1 = *((todoListEntry**)p1);
+	auto* e2 = *((todoListEntry**)p2);
+	
+	if(e1->dateDue == Null)
+		return 1;
+	else if(e2->dateDue == Null)
+		return -1;
+	
+	auto d1 = StringToDate(e1->dateDue);
+	Assert(sizeof(d1.year) == sizeof(ui16));
+	Assert(sizeof(d1.month) == sizeof(ui8));
+	Assert(sizeof(d1.day) == sizeof(ui8));
+	ui32 d1p = d1.year << 16 | d1.month << 8 | d1.day;
+	
+	auto d2 = StringToDate(e2->dateDue);
+	ui32 d2p = d2.year << 16 | d2.month << 8 | d2.day;
+	
+	if(d1p < d2p)
+		return -1;
+	else if(d1p == d2p)
+		return 0;
+	else
+		return 1;
+}
+
 file 				 todosFile;
 memory_stack todoList;
 memory_stack logFile;
@@ -33,12 +60,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "list" };
+		char* debugArgs[] = { args[0], "list", "all", "sortbydd" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
 	#endif
-	
+
 	// Initial help message
 	if(argsCount == 1) {
 		printf("\nUsage: %s [<command>] [<options>]\n", args[0]);
@@ -64,6 +91,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	const char* 	   tags[MaxTags] = { Null };
 	const char* 	   specialOption = Null;
 	bool 						 printHorizontal = false;
+	bool             sortByDateDue = false;
 
 	// Parse and check command
 	command = args[1];
@@ -89,7 +117,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	#else
 	const char* dataPath = "data/todos.txt";
 	#endif
-	
+
 	guid guidCounter = 0;
 			 todoList = AllocateStack();
 	{
@@ -99,7 +127,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		todosFile = LoadFile(dataPath);
 		if(AssertionWasHit() == true)
 			PrintErrorExit("Couldn't load data/todos.txt");
-		
+
 		// Create backup if required
 		{
 			char* date = DateToString(GetDate(0));
@@ -113,7 +141,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 				printf("\n%s backup created\n", filePath);
 			}
 		}
-		
+
 		// Go back to check for backups more than 10 days old
 		{
 			bool deletedOne = false;
@@ -163,11 +191,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 	FromTo(2, argsCount) {
 		const char* arg = args[it];
 
-		if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && (StringsAreEqual(arg, "all") == true || StringsAreEqual(arg, "alltags") == true))
-			specialOption = arg;
-		else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && StringsAreEqual(arg, "printhor") == true)
-			printHorizontal = true;
-		else if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true && IsNumber((char*)arg) == true) { // Skip the -id when deleting a todo
+		if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true) { // Special cases
+			if(it == 2 && (StringsAreEqual(arg, "all") == true || StringsAreEqual(arg, "alltags") == true)) {
+				specialOption = arg;
+				continue;
+			}	
+			else if(StringsAreEqual(arg, "printhor") == true) {
+				printHorizontal = true;
+				continue;
+			}
+			else if(StringsAreEqual(arg, "sortbydd") == true) {
+				sortByDateDue = true;
+				continue;
+			}
+		}
+		if(it == 2 && StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Delete]) == true && IsNumber((char*)arg) == true) { // Skip the -id when deleting a todo
 			id = arg;
 			break;
 		}
@@ -175,7 +213,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			it += 1;
 			CheckArgsExit();
 			id = args[it];
-			
+
 			if(FindEntry(id, todoList) == Null)
 				PrintErrorExit("Invalid ID specified");
 		}
@@ -199,7 +237,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(temp[0] == '=') {
 				if(temp == args[it]) // There wasn't a < or > before the =
 					PrintErrorExit("Invalid date added specified");
-				
+
 				if(dateAddedLogic == date_logic::LT)
 					dateAddedLogic = date_logic::LTE;
 				else
@@ -227,19 +265,19 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(temp[0] == '=') {
 				if(temp == args[it]) // There wasn't a < or > before the =
 					PrintErrorExit("Invalid date due specified");
-				
+
 				if(dateDueLogic == date_logic::LT)
 					dateDueLogic = date_logic::LTE;
 				else
 					dateDueLogic = date_logic::GTE;
 				temp += 1;
 			}
-			
+
 			bool  workDays = temp[GetStringLength(temp) - 1] == 'w';
 			char* sign = (char*)FindSubstring("+", temp);
 			if(sign == Null)
 				sign = (char*)FindSubstring("-", temp);
-			
+
 			if(workDays == true)
 				temp[GetStringLength(temp) - 1] = '\0';
 			if(IsDateAndValid(temp) == true) {
@@ -253,10 +291,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 							offset += 1; // Increate the search range
 						sign[1] = '\0';
 					}
-					
+
 					temp = Concatenate(2, temp, ToString(offset)); // Update the offset
 				}
-				
+
 				dateDue = DateToString(StringToDate(temp)); // Do this to take into account any modifiers to the date (e.g. logic or offsets) and convert to long format
 			}
 			else
@@ -311,7 +349,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			tags[4] = args[it];
 		}
 		else
-			PrintErrorExit("Invalid argument supplied");	
+			PrintErrorExit("Invalid argument supplied");
 	}
 
 	// Check command arguments and possibly display help message
@@ -321,11 +359,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount < 4 && specialOption == Null) {
-		printf("\nUsage: %s %s [<options>]\n", args[0], command);
+		printf("\nUsage: %s %s [<options>] [printhor] [sortbydd]\n", args[0], command);
 		DisplayCommandOptions(true, true, true, true, true);
-		printf("    all                                                      list all todos\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
-		printf("    alltags                                                  list all existing tags\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
-		printf("    printhor                                                 print the results horizontally (only valid with 'all' or if printing several tasks, must be the last argument)\n", (const char*)ValidArguments[ValidArgumentsIndex::TaskString]);
+		printf("    all                                                      list all todos\n");
+		printf("    alltags                                                  list all existing tags\n");
+		printf("  printhor                                                   print the results horizontally\n");
+		printf("  sortbydd                                                   sort by ascending date due\n");
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true && (id == Null || argsCount < 6)) {
@@ -346,17 +385,17 @@ ConsoleAppEntryPoint(args, argsCount) {
 		*(fileNameStart)= '\0';
 		const char* extension = GetFileExtension(dataPath);
 		logFilePath = Concatenate(3, logFilePath, "log.", extension);
-		
+
 		// Store time, command and changes of last x commands
-		
+
 		// Extract the ocntents of previous log entries and store in current log
 		logFile = AllocateStack();
 		if(FileExists(logFilePath) == true) {
-			file file = LoadFile(logFilePath);	
+			file file = LoadFile(logFilePath);
 			Push(file.memory, file.size, logFile);
 			FreeFile(file);
 		}
-		
+
 		// Search through file for today's date header. If not found, add it
 		char* eof = PushString("", true, logFile);
 		char* todayStringHeader = Concatenate(3, "# ", DateToString(GetDate(0)), " #");
@@ -364,16 +403,16 @@ ConsoleAppEntryPoint(args, argsCount) {
 			PushString("\n", false, logFile);
 			PushString(todayStringHeader, false, logFile);
 			PushString("\n", false, logFile);
-		} 
+		}
 		*eof = '\n'; // This must happen in both cases
-		
+
 		// Add time
 		const char* string = Concatenate(2, GetTimeNow(), " ");
-		
+
 		// Push arguments
 		FromTo(0, argsCount)
-			string = Concatenate(3, string, args[it], " "); 
-		
+			string = Concatenate(3, string, args[it], " ");
+
 		UpdateLogFile(string, logFile, logFilePath);
 	}
 
@@ -439,14 +478,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		else {
 			auto entriesToPrint = AllocateStack();
-			
+
 			guid ID = 0;
 			if(id != Null)
 				ID = StringToInt(id, Null);
 
 			TodoEntriesLoop(todoList) {
 				auto* entry = GetTodosEntry(todoList, it);
-				
+
 				if(specialOption != Null && StringsAreEqual(specialOption, "all") == true) { // Print all
 					Push(&entry, sizeof(todoListEntry*), entriesToPrint);
 					continue;
@@ -478,7 +517,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 					auto entryDate = StringToDate(entry->dateAdded);
 					ui32 entryDateTogether = entryDate.year << 16 | entryDate.month << 8 | entryDate.day;
-					
+
 					if(dateAddedLogic == date_logic::None && entryDateTogether == targetDateTogether ||
 						 dateAddedLogic == date_logic::LT && entryDateTogether < targetDateTogether ||
 						 dateAddedLogic == date_logic::LTE && entryDateTogether <= targetDateTogether ||
@@ -487,7 +526,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					{
 						Push(&entry, sizeof(todoListEntry*), entriesToPrint);
 						continue;
-					}	
+					}
 				}
 
 				if(dateDue != Null) {
@@ -499,7 +538,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 					auto entryDate = StringToDate(entry->dateDue);
 					ui32 entryDateTogether = entryDate.year << 16 | entryDate.month << 8 | entryDate.day;
-					
+
 					if(dateDueLogic == date_logic::None && entryDateTogether == targetDateTogether ||
 						 dateDueLogic == date_logic::LT && entryDateTogether < targetDateTogether ||
 						 dateDueLogic == date_logic::LTE && entryDateTogether <= targetDateTogether ||
@@ -507,7 +546,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						 dateDueLogic == date_logic::GTE && entryDateTogether >= targetDateTogether)
 					{
 						Push(&entry, sizeof(todoListEntry*), entriesToPrint);
-						continue;	 
+						continue;
 					}
 				}
 
@@ -523,10 +562,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 					}
 				}
 			}
-			
+
 			if(entriesToPrint.size != 0) {
 				ui8 count = entriesToPrint.size / sizeof(todoListEntry*);
-				
+
 				// Determine length of tasks string column
 				ui16 taskColumnLength = 4; // Size of "Task" in header without spaces
 				ForAll(count) {
@@ -535,16 +574,16 @@ ConsoleAppEntryPoint(args, argsCount) {
 					if(length > taskColumnLength)
 						taskColumnLength = length;
 				}
-				
+
 				// Print header for horizontal print
-				if(entriesToPrint.size >= sizeof(todoListEntry*) * 2 && printHorizontal == true) {
+				if(printHorizontal == true) {
 					printf("\n  ID | Task ");
 					if(taskColumnLength > 4) {
 						ForAll(taskColumnLength - 4)
 							printf(" ");
 					}
 					printf("| Date Added | Date Due          | Tags\n");
-					
+
 					// Print horizontal separator
 					printf("============");
 					ForAll(taskColumnLength - 4)
@@ -552,9 +591,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 					printf("=========================================\n");
 				}
 				
+				if(sortByDateDue == true) {
+					// void qsort (void* base, size_t num, size_t size,            int (*compar)(const void*,const void*));
+					qsort(entriesToPrint.memory, count, sizeof(todoListEntry*), CompareEntriesByDateDue);
+				}
+
 				ForAll(count) {
 					auto* entry = ((todoListEntry**)entriesToPrint.memory)[it];
-					if(entriesToPrint.size >= sizeof(todoListEntry*) * 2 && printHorizontal == true) { // Print task horizontally
+					if(printHorizontal == true) { // Print task horizontally
 						// ID
 						Assert(entry->ID <= 999);
 						if(entry->ID <= 9)
@@ -564,7 +608,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						else
 							printf(" %i ", entry->ID);
 						printf("|");
-						
+
 						// Print task string
 						{
 							printf(" %s ", entry->task);
@@ -573,9 +617,9 @@ ConsoleAppEntryPoint(args, argsCount) {
 							ForAll(diff)
 								printf(" ");
 						}
-						
+
 						printf("| %s |", entry->dateAdded);
-						
+
 						// dateDue
 						{
 							const char* empty = "         -        ";
@@ -583,7 +627,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 								printf(empty);
 							else {
 								const char* date = Concatenate(3, " ", entry->dateDue, " (");
-								
+
 								// Add day offset
 								si32 diffDays = GetDaysOffsetFromToday(entry->dateDue);
 								if(diffDays > 0)
@@ -592,7 +636,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 									date = Concatenate(2, date, ToString(diffDays));
 								date = Concatenate(2, date, ")");
 								printf("%s", date);
-								
+
 								// Pad the remaining space
 								auto length = GetStringLength(date);
 								auto maxLength = GetStringLength(empty);
@@ -601,7 +645,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 							}
 							printf(" |");
 						}
-						
+
 						// tags
 						if(AnyTagsPresent(entry->tags) == true) {
 							ForAll(MaxTags) {
@@ -612,7 +656,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						else
 							printf(" - ");
 						printf("\n");
-						
+
 						// Print horizontal separator
 						printf("------------");
 						ForAll(taskColumnLength - 4)
@@ -620,7 +664,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						printf("-----------------------------------------\n");
 					}
 					else
-						PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);	
+						PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
 				}
 			}
 			FreeStack(entriesToPrint);
@@ -670,7 +714,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			Assert(moddedEntry != Null);
 
 			const char* outputString = Concatenate(3, "Task \"", taskString == Null ? moddedEntry->task : previousString, "\" modified, updated ");
-			
+
 			if(taskString != Null) {
 				outputString = Concatenate(2, outputString, "task text");
 				modsCount -= 1;
@@ -687,7 +731,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 			if(AnyTagsPresent((char**)tags) == true)
 				outputString = Concatenate(2, outputString, "tags");
-			
+
 			printf("\n%s\n", outputString);
 
 			PrintTaskVertical(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
@@ -702,7 +746,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		auto* entry = FindEntry(id, todoList);
 		if(entry != Null) {
 			char* taskString = AllocateString(entry->task, Null);
-			
+
 			ClearMemory(entry, sizeof(todoListEntry));
 			void* dataStart = entry + 1;
 			void* dataEnd = (ui8*)todoList.memory + todoList.size;
@@ -715,7 +759,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			const char* outputString = Concatenate(3, "Todo \"", taskString, "\" deleted");
 			printf("\n%s\n", outputString);
 			SaveTodosFile(todoList, dataPath);
-			
+
 			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
 		}
 	}
