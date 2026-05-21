@@ -202,15 +202,23 @@ ConsoleAppEntryPoint(args, argsCount) {
 	PrintToLog("Running list commands...");
 	ForAll(2) {
 		system("del temp.txt");
-		if(it == 0)
-			commands[0] = "todos list all";
-		else
-			commands[0] = "todos list all printhor";
 		PrintLogNewline();
-		CarryOutCommands(commands, 1);
-		auto daysOffset = GetDaysOffsetFromToday("10/06/2026");
+		
+		if(it == 0) {
+			commands[0] = "todos list all";
+			CarryOutCommands(commands, 1);
+		}
+		else {
+			commands[0] = "todos add -s \"task x\" -dd 01/06/2026 -t \"tag 4\"";
+			CarryOutCommands(commands, 1);
+			
+			system("del temp.txt"); // Test only the listing outputs
+			commands[0] = "todos list all printhor sortbydd";
+			CarryOutCommands(commands, 1);
+		}
 		const char* targetOutput = Null;
-		if(it == 0)
+		if(it == 0) {
+			auto daysOffset = GetDaysOffsetFromToday("10/06/2026");
 			targetOutput = Concatenate(6, "\r\n"
 																		"  ID:         1\r\n"
 																		"  String:     modded string\r\n",
@@ -225,22 +233,34 @@ ConsoleAppEntryPoint(args, argsCount) {
 																		"  Date due:   -\r\n"
 																		"  Tags:       tag3\r\n"
 																		"\r\n");
+		}
 		else {
-			const char* dateDueString = Concatenate(4, "10/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")");
+			auto daysOffset = GetDaysOffsetFromToday("10/06/2026");
+			const char* dateDueString1 = Concatenate(4, "10/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")");
 			si32 diffDays = GetDaysOffsetFromToday("10/06/2026");
 			if(Magnitude(diffDays) <= 99)
-				dateDueString = Concatenate(2, dateDueString, " ");
+				dateDueString1 = Concatenate(2, dateDueString1, " ");
 			if(Magnitude(diffDays) < 9)
-				dateDueString = Concatenate(2, dateDueString, "  ");
+				dateDueString1 = Concatenate(2, dateDueString1, "  ");
 			
-			targetOutput = Concatenate(5, "\r\n"
-																		"  ID | Task          | Date Added | Date Due          | Tags\r\n"
-																		"==============================================================\r\n" 
-																		"   1 | modded string | ", Concatenate(3, todayString, " | ", dateDueString), " | tag 2, new tag\r\n"
-																		"--------------------------------------------------------------\r\n"
-																		"   2 | task number 4 | ", Concatenate(2, todayString, " |         -         | tag3\r\n"),
-																		"--------------------------------------------------------------\r\n"
-																		"\r\n");	
+			daysOffset = GetDaysOffsetFromToday("01/06/2026");
+			const char* dateDueString2 = Concatenate(4, "01/06/2026 (", daysOffset > 0 ? "+" : "-", ToString(daysOffset), ")");
+			diffDays = GetDaysOffsetFromToday("10/06/2026");
+			if(Magnitude(diffDays) <= 99)
+				dateDueString2 = Concatenate(2, dateDueString2, " ");
+			if(Magnitude(diffDays) < 9)
+				dateDueString2 = Concatenate(2, dateDueString2, "  ");
+			
+			targetOutput = Concatenate(11, "\r\n"
+																		 "  ID | Task          | Date Added | Date Due          | Tags\r\n"
+																		 "==============================================================\r\n" 
+																		 "   3 | task x        | ", todayString, " | ", dateDueString2, " | tag 4\r\n"
+																		 "--------------------------------------------------------------\r\n"
+																		 "   1 | modded string | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
+																		 "--------------------------------------------------------------\r\n"
+																		 "   2 | task number 4 | ", todayString, " |         -         | tag3\r\n"
+																		 "--------------------------------------------------------------\r\n"
+																		 "\r\n");	
 		}
 		// Run custom comparison
 		{
