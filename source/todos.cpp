@@ -60,7 +60,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG
 		#if 0
-		char* debugArgs[] = { args[0], "list", "all", "sortbydd" };
+		char* debugArgs[] = { args[0], "add", "-s", "hello" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -377,7 +377,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 
-	// Update the log file with command and arguments, plus time stamp
+	// Update the log file with command and arguments, plus time stamp and trim out any entries older that 10 days
 	const char* logFilePath = Null;
 	if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == false) {
 		logFilePath = AllocateString(dataPath, Null);
@@ -385,15 +385,24 @@ ConsoleAppEntryPoint(args, argsCount) {
 		*(fileNameStart)= '\0';
 		const char* extension = GetFileExtension(dataPath);
 		logFilePath = Concatenate(3, logFilePath, "log.", extension);
-
-		// Store time, command and changes of last x commands
-
+		
 		// Extract the ocntents of previous log entries and store in current log
 		logFile = AllocateStack();
 		if(FileExists(logFilePath) == true) {
 			file file = LoadFile(logFilePath);
 			Push(file.memory, file.size, logFile);
 			FreeFile(file);
+		}
+		
+		// Trim out unneeded entries
+		{
+			const char* limit = Concatenate(3, "# ", DateToString(GetDate(-10)), " #");
+			const char* toKeep = FindSubstring(limit, (const char*)logFile.memory);
+			if(toKeep != Null && toKeep != logFile.memory) {
+				auto length = logFile.size - ((ui8*)toKeep - (ui8*)logFile.memory);
+				CopyMemory((void*)toKeep, length, logFile.memory);
+				logFile.size = length;
+			}
 		}
 
 		// Search through file for today's date header. If not found, add it

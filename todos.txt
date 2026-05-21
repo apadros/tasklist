@@ -5,5 +5,4 @@ Key
 - Various @TODO in code files
 - Test release build
 - Once complete, publish new API version?
-- Checking whether the provided date actually exist. E.g. 30th February			
-- Find a way to trim the log file - keep the last x days worth of entries / commands
+- Checking whether the provided date actually exist. E.g. 30th February
