@@ -2,7 +2,5 @@ Key
 	@WIP
 	@PRIORITY
 
-- Various @TODO in code files
-- Test release build
+- Release build!
 - Once complete, publish new API version?
-- Checking whether the provided date actually exist. E.g. 30th February

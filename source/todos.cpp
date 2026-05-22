@@ -121,15 +121,18 @@ ConsoleAppEntryPoint(args, argsCount) {
 	guid guidCounter = 0;
 			 todoList = AllocateStack();
 	{
-		if(FileExists(dataPath) == false)
-			PrintErrorExit("Couldn't find data/todos.txt");
-
-		todosFile = LoadFile(dataPath);
-		if(AssertionWasHit() == true)
-			PrintErrorExit("Couldn't load data/todos.txt");
+		if(FileExists(dataPath) == false) {
+			todosFile = CreateFile();
+			PrintLogMessage("data/todos.txt wasn't found, a new one will be created with the addition of the first task");
+		}
+		else {
+			todosFile = LoadFile(dataPath);
+			if(AssertionWasHit() == true)
+				PrintErrorExit("Couldn't load data/todos.txt");
+		}
 
 		// Create backup if required
-		{
+		if(todosFile.size > 0) { // A recently-created file will have size == 0
 			char* date = DateToString(GetDate(0));
 			date[2] = '_';
 			date[5] = '_';
@@ -138,7 +141,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			filePath = Concatenate(5, filePath, "_", date, ".", GetFileExtension(dataPath));
 			if(FileExists(filePath) == false) {
 				SaveFile(todosFile, filePath);
-				printf("\n%s backup created\n", filePath);
+				PrintLogMessage(Concatenate(2, filePath, " backup created"));
 			}
 		}
 
@@ -158,7 +161,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						deletedOne = true;
 					}
 					DeleteFile(filePath);
-					printf("Backup file %s deleted\n", filePath);
+					PrintLogMessage(Concatenate(3, "Backup file ", filePath, " deleted\n"));
 				}
 			}
 		}
@@ -449,7 +452,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			}
 		}
 		CopyMemory(tags, sizeof(tags), entry->tags);
-		printf("\nTask added\n");
+		PrintLogMessage("Task added");
 		PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
 
 		SaveTodosFile(todoList, dataPath);
@@ -741,7 +744,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(AnyTagsPresent((char**)tags) == true)
 				outputString = Concatenate(2, outputString, "tags");
 
-			printf("\n%s\n", outputString);
+			PrintLogMessage(outputString);
 
 			PrintTaskVertical(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
 			SaveTodosFile(todoList, dataPath);
@@ -766,7 +769,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			todoList.size -= sizeof(todoListEntry);
 
 			const char* outputString = Concatenate(3, "Todo \"", taskString, "\" deleted");
-			printf("\n%s\n", outputString);
+			PrintLogMessage(outputString);
 			SaveTodosFile(todoList, dataPath);
 
 			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
@@ -778,7 +781,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		auto backupFile = LoadFile(backupPath);
 		Assert(IsValid(backupFile) == true);
 		SaveFile(backupFile.memory, backupFile.size, dataPath);
-		printf("\nTodos file replaced with backup\n", GetBackupTodosFilePath(dataPath));
+		PrintLogMessage(Concatenate(2, "Todos file replaced with backup ", GetBackupTodosFilePath(dataPath)));
 		FreeFile(backupFile);
 	}
 	else

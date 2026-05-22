@@ -45,6 +45,7 @@ bool TagIsValid(const char* tag);
 void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags);
 
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags);
+void PrintLogMessage(const char* string);
 
 #include "apad_memory.h"
 char* GetBackupTodosFilePath(const char* filePath);

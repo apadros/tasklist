@@ -105,8 +105,15 @@ void SaveTodosFile(memory_stack& todoList, const char* dataPath) {
 	FreeFile(file);
 }
 
+void PrintLogMessage(const char* string) {
+	printf("\n[LOG] %s\n", string);
+}
+
 // Any changes to this function must be reflected in SaveTodosFile()
 void SaveTodosFileBackup(memory_stack& todoList, const char* dataPath) {
+	if(todoList.size == 0) // Not an error in case of new-created data/todos.txt
+		return;
+	
 	AssertRet(dataPath);
 	
 	auto file = CreateFile();
