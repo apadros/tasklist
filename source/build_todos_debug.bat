@@ -5,9 +5,9 @@ cd build
 
 del * /q
 
-copy ..\..\apad_api_lib64\*debug.* .
+copy ..\..\apad_api_lib64\bin\*debug.* .
 
-cl /nologo /w /I..\..\apad_api_lib64 /Fe: todos /Od /Zi /DAPAD_DEBUG /std:c++17 ..\helpers.cpp ..\todos.cpp *debug.lib
+cl /nologo /w /I..\..\apad_api_lib64\source /Fe: todos /Od /Zi /DAPAD_DEBUG_COMMANDS /DAPAD_DEBUG_DATA_PATH /std:c++17 ..\helpers.cpp ..\todos.cpp *debug.lib
 
 del *.ilk
 del *.obj

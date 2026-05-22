@@ -10,10 +10,10 @@ del *testbench* /Q > temp.txt
 
 REM Link with the debug version of the API
 echo:
-copy ..\..\apad_api_lib64\*debug.* .
+copy ..\..\apad_api_lib64\bin\*debug.* .
 
 echo:
-cl /I..\..\apad_api_lib64 /std:c++17 /w /nologo /Od /Zi /Fe: run_testbench.exe ..\testbench.cpp /link *debug*.lib
+cl /I..\..\apad_api_lib64\source /std:c++17 /w /nologo /Od /Zi /Fe: run_testbench.exe ..\testbench.cpp /link *debug*.lib
 
 del *testbench*.obj
 del *testbench*.ilk

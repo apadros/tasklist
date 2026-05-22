@@ -58,7 +58,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	RegisterExitFunction(ExitFunction);
 
-	#ifdef APAD_DEBUG
+	#ifdef APAD_DEBUG_COMMANDS
 		#if 0
 		char* debugArgs[] = { args[0], "add", "-s", "hello" };
 		args = debugArgs;
@@ -112,7 +112,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 															PrintErrorExit("Not enough arguments supplied."); }
 
 	// Open the todos file and generate task list
-	#ifdef APAD_DEBUG
+	#ifdef APAD_DEBUG_DATA_PATH
 	const char* dataPath = "../../data/todos.txt";
 	#else
 	const char* dataPath = "data/todos.txt";
@@ -409,15 +409,22 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 
 		// Search through file for today's date header. If not found, add it
-		char* eof = PushString("", true, logFile);
+		char* lastChar = Null;
+		char  lastCharCopy = Null;
+		if(logFile.size > 0) {
+			lastChar = (char*)logFile.memory + logFile.size - 1;
+			lastCharCopy = *lastChar;
+			*lastChar = '\0';
+		}
 		char* todayStringHeader = Concatenate(3, "# ", DateToString(GetDate(0)), " #");
 		if(FindSubstring(todayStringHeader, (const char*)logFile.memory) == Null) {
 			PushString("\n", false, logFile);
 			PushString(todayStringHeader, false, logFile);
 			PushString("\n", false, logFile);
 		}
-		*eof = '\n'; // This must happen in both cases
-
+		if(lastChar != Null)
+			*lastChar = lastCharCopy;
+		
 		// Add time
 		const char* string = Concatenate(2, GetTimeNow(), " ");
 
