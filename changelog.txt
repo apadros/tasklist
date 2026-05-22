@@ -1,2 +1,2 @@
-v0.1.0 - WIP
-	- Added basic loading of calendar.txt and displaying of its contents
+v1.0.0
+	- All base target funcationality included
