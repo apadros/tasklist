@@ -1,2 +1,2 @@
 v1.0.0
-	- All base target funcationality included
+	- All base target functionality included
