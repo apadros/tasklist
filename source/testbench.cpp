@@ -254,7 +254,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			targetOutput = Concatenate(11, "\r\n"
 																		 "  ID | Task          | Date Added | Date Due          | Tags\r\n"
 																		 "==============================================================\r\n" 
-																		 "   3 | task x        | ", todayString, " | ", dateDueString2, " | tag 4\r\n"
+																		 "   3 | task x        | ", todayString, " | ", dateDueString2, "  | tag 4\r\n"
 																		 "--------------------------------------------------------------\r\n"
 																		 "   1 | modded string | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
 																		 "--------------------------------------------------------------\r\n"

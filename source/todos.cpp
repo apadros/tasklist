@@ -12,7 +12,7 @@
 #include "apad_win32.h"
 #include "helpers.h"
 
-#include <stdlib.h> // For qsort
+#include <stdlib.h> // For qsort and system
 int CompareEntriesByDateDue(const void* p1, const void* p2) {
 	auto* e1 = *((todoListEntry**)p1);
 	auto* e2 = *((todoListEntry**)p2);
@@ -124,6 +124,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		if(FileExists(dataPath) == false) {
 			todosFile = CreateFile();
 			PrintLogMessage("data/todos.txt wasn't found, a new one will be created with the addition of the first task");
+			system("if not exist data ( mkdir data )");
 		}
 		else {
 			todosFile = LoadFile(dataPath);
