@@ -15,6 +15,8 @@ struct todoListEntry {
 	char* tags[MaxTags]; // Can all be Null
 };
 
+program_external const ui8 MaxTaskPrintLength;
+
 #include <stdio.h>
 #define PrintError(_string) \
 	printf("\nERROR: %s\n", _string)

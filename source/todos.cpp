@@ -59,8 +59,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 	RegisterExitFunction(ExitFunction);
 
 	#ifdef APAD_DEBUG_COMMANDS
-		#if 0
-		char* debugArgs[] = { args[0], "mod", "-id", "2", "-dd", "-" };
+		#if 1
+		char* debugArgs[] = { args[0], "list", "all"};
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -642,7 +642,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 						printf("|");
 
 						// Print task string
-						{
+						char* taskToPrint = AllocateString(entry->task, Null);
+						if(GetStringLength(entry->task) > MaxTaskPrintLength) {
+							remainingString = AllocateString(entry->task, MaxTaskPrintLength);
+							
+						}
+						else {
 							printf(" %s ", entry->task);
 							auto length = GetStringLength(entry->task);
 							auto diff = Magnitude(length - taskColumnLength);

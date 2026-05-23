@@ -2,4 +2,5 @@ Key
 	@WIP
 	@PRIORITY
 
+- Time task string if over a certain length - subdivide in 2+ rows @WIP for horizontal printing
 - Test runs with real data
