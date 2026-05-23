@@ -22,6 +22,11 @@ bool TagIsValid(const char* tag) {
 	return tag != Null;
 }
 
+#include "apad_string.h"
+bool DateDueIsUnspecified(const char* dateDue) {
+	return GetStringLength(dateDue) == 1 && dateDue[0] == '-';
+}
+
 bool AnyTagsPresent(char** tags) {
 	AssertRetType(tags != Null, false);
 	ForAll(MaxTags) {

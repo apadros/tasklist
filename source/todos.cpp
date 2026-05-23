@@ -60,7 +60,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG_COMMANDS
 		#if 0
-		char* debugArgs[] = { args[0], "list", "-dd", "today" };
+		char* debugArgs[] = { args[0], "mod", "-id", "2", "-dd", "-" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -259,51 +259,54 @@ ConsoleAppEntryPoint(args, argsCount) {
 			CheckArgsExit();
 
 			char* temp = AllocateString(args[it], Null);
-			if(temp[0] == '<' || temp[0] == '>') {
-				if(temp[0] == '<')
-					dateDueLogic = date_logic::LT;
-				else
-					dateDueLogic = date_logic::GT;
-				temp += 1;
-			}
-			if(temp[0] == '=') {
-				if(temp == args[it]) // There wasn't a < or > before the =
-					PrintErrorExit("Invalid date due specified");
-
-				if(dateDueLogic == date_logic::LT)
-					dateDueLogic = date_logic::LTE;
-				else
-					dateDueLogic = date_logic::GTE;
-				temp += 1;
-			}
-
-			bool  workDays = temp[GetStringLength(temp) - 1] == 'w';
-			char* sign = (char*)FindSubstring("+", temp);
-			if(sign == Null)
-				sign = (char*)FindSubstring("-", temp);
-
-			if(workDays == true)
-				temp[GetStringLength(temp) - 1] = '\0';
-			if(IsDateAndValid(temp) == true) {
-				if(sign != Null && workDays == true) {
-					ui16 offset = StringToInt(sign + 1, Null);
-					sign[1] = '\0'; // Cut off the offset
-					FromToInc(1, offset) { // Work out new offset
-						const char* tempString = Concatenate(2, temp, ToString(it));
-						auto 				date = StringToDate(tempString);
-						if(date.dayOfTheWeek >= 6)
-							offset += 1; // Increate the search range
-						sign[1] = '\0';
-					}
-
-					temp = Concatenate(2, temp, ToString(offset)); // Update the offset
+			if(DateDueIsUnspecified(temp) == true)
+				dateDue = temp;
+			else {
+				if(temp[0] == '<' || temp[0] == '>') {
+					if(temp[0] == '<')
+						dateDueLogic = date_logic::LT;
+					else
+						dateDueLogic = date_logic::GT;
+					temp += 1;
 				}
-
-				dateDue = DateToString(StringToDate(temp)); // Do this to take into account any modifiers to the date (e.g. logic or offsets) and convert to long format
+				if(temp[0] == '=') {
+					if(temp == args[it]) // There wasn't a < or > before the =
+						PrintErrorExit("Invalid date due specified");
+	
+					if(dateDueLogic == date_logic::LT)
+						dateDueLogic = date_logic::LTE;
+					else
+						dateDueLogic = date_logic::GTE;
+					temp += 1;
+				}
+				
+				bool  workDays = temp[GetStringLength(temp) - 1] == 'w';
+				char* sign = (char*)FindSubstring("+", temp);
+				if(sign == Null)
+					sign = (char*)FindSubstring("-", temp);
+				
+				if(workDays == true)
+					temp[GetStringLength(temp) - 1] = '\0';
+				if(IsDateAndValid(temp) == true) {
+					if(sign != Null && workDays == true) {
+						ui16 offset = StringToInt(sign + 1, Null);
+						sign[1] = '\0'; // Cut off the offset
+						FromToInc(1, offset) { // Work out new offset
+							const char* tempString = Concatenate(2, temp, ToString(it));
+							auto 				date = StringToDate(tempString);
+							if(date.dayOfTheWeek >= 6)
+								offset += 1; // Increate the search range
+							sign[1] = '\0';
+						}
+	
+						temp = Concatenate(2, temp, ToString(offset)); // Update the offset
+					}
+	
+					dateDue = DateToString(StringToDate(temp)); // Do this to take into account any modifiers to the date (e.g. logic or offsets) and convert to long format
+				}
+				else
+					PrintErrorExit("Invalid date due specified");
 			}
-			else
-				PrintErrorExit("Invalid date due specified");
-
 		}
 		else if(StringsAreEqual(arg, ValidArguments[ValidArgumentsIndex::TagsGeneric]) == true) {
 			// Scan arguments and store up to MaxTags or end of arguments so long as none are valid options
@@ -447,7 +450,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 		entry->ID = ++guidCounter;
 		entry->task = (char*)taskString;
 		entry->dateAdded = (char*)dateAdded;
-		entry->dateDue = (char*)dateDue;
+		if(dateDue != Null && DateDueIsUnspecified(dateDue) == true)
+			entry->dateDue = Null;
+		else
+			entry->dateDue = (char*)dateDue;
 
 		Assert(sizeof(tags) == sizeof(entry->tags));
 		FromTo(0, MaxTags - 1) {
@@ -548,8 +554,14 @@ ConsoleAppEntryPoint(args, argsCount) {
 						continue;
 					}
 				}
-
-				if(dateDue != Null && entry->dateDue != Null) {
+				
+				if(dateDue != Null && DateDueIsUnspecified(dateDue) == true) { // If dateDue == '-' and entry has no dateDue, add to list 
+					if(entry->dateDue == Null) {
+						Push(&entry, sizeof(todoListEntry*), entriesToPrint);
+						continue;
+					}
+				}
+				else if(dateDue != Null && entry->dateDue != Null) {
 					auto targetDate = StringToDate(dateDue);
 					Assert(sizeof(targetDate.day) == sizeof(ui8));
 					Assert(sizeof(targetDate.month) == sizeof(ui8));
@@ -708,8 +720,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 					entry->task = (char*)taskString;
 					modsCount += 1;
 				}
-
-				if(dateDue != Null) {
+				
+				if(DateDueIsUnspecified(dateDue) == true) {
+					entry->dateDue = Null;
+					modsCount += 1;
+				}
+				else if(dateDue != Null) {
 					entry->dateDue = (char*)dateDue;
 					modsCount += 1;
 				}

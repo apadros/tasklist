@@ -172,13 +172,13 @@ ConsoleAppEntryPoint(args, argsCount) {
 	// Test mod commands
 	PrintLogNewline();
 	PrintToLog("Running mod commands...");
-	commands[0] = "todos mod -id 1 -s \"modded string\" -t2 \"new tag\"";
+	commands[0] = "todos mod -id 1 -s \"modded string\" -dd - -t2 \"new tag\"";
 	commands[1] = "todos mod -id 2 -dd 10/10/2030+5 -t \"\"";
 	PrintLogNewline();
 	CarryOutCommands(commands, 2);
 	
 	// Compare
-	targetFileContents[0] = Concatenate(3, "\"modded string\" ", todayString, " 10/06/2026 \"tag 2\" \"new tag\" ");
+	targetFileContents[0] = Concatenate(3, "\"modded string\" ", todayString, " - \"tag 2\" \"new tag\" ");
 	targetFileContents[1] = Concatenate(3, "\"task number 4\" ", todayString, " 15/10/2030 - ");
 	comparison = LoadTodosAndCompare(targetFileContents, 2);
 	if(comparison == false)
@@ -205,6 +205,10 @@ ConsoleAppEntryPoint(args, argsCount) {
 		PrintLogNewline();
 		
 		if(it == 0) {
+			commands[0] = "todos mod -id 1 -dd 10/06/2026";
+			CarryOutCommands(commands, 1);
+			
+			system("del temp.txt"); // Test only the listing outputs
 			commands[0] = "todos list all";
 			CarryOutCommands(commands, 1);
 		}
