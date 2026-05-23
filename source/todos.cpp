@@ -60,7 +60,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG_COMMANDS
 		#if 0
-		char* debugArgs[] = { args[0], "add", "-s", "hello" };
+		char* debugArgs[] = { args[0], "list", "-dd", "today" };
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -549,7 +549,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 					}
 				}
 
-				if(dateDue != Null) {
+				if(dateDue != Null && entry->dateDue != Null) {
 					auto targetDate = StringToDate(dateDue);
 					Assert(sizeof(targetDate.day) == sizeof(ui8));
 					Assert(sizeof(targetDate.month) == sizeof(ui8));
