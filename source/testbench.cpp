@@ -200,7 +200,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	// List vertically and horizontally
 	PrintLogNewline();
 	PrintToLog("Running list commands...");
-	ForAll(2) {
+	ForAll(3) {
 		system("del temp.txt");
 		PrintLogNewline();
 		
@@ -212,12 +212,16 @@ ConsoleAppEntryPoint(args, argsCount) {
 			commands[0] = "todos list all";
 			CarryOutCommands(commands, 1);
 		}
-		else {
-			commands[0] = "todos add -s \"task x\" -dd 01/06/2026 -t \"tag 4\"";
+		else if(it ==1) {
+			commands[0] = "todos add -s \"task x\" -dd 01/06/2026 -t \"tag 2\"";
 			CarryOutCommands(commands, 1);
 			
 			system("del temp.txt"); // Test only the listing outputs
 			commands[0] = "todos list all -printhor -sortbydd -maxwidth 10";
+			CarryOutCommands(commands, 1);
+		}
+		else {
+			commands[0] = "todos list -t \"tag 2\" -printhor";
 			CarryOutCommands(commands, 1);
 		}
 		const char* targetOutput = Null;
@@ -255,18 +259,28 @@ ConsoleAppEntryPoint(args, argsCount) {
 			if(Magnitude(diffDays) < 9)
 				dateDueString2 = Concatenate(2, dateDueString2, "  ");
 			
-			targetOutput = Concatenate(11, "\r\n"
-																		 "  ID | Task       | Date Added | Date Due          | Tags\r\n"
-																		 "===========================================================\r\n" 
-																		 "   3 | task x     | ", todayString, " | ", dateDueString2, "  | tag 4\r\n"
-																		 "-----------------------------------------------------------\r\n"
-																		 "   1 | modded str | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
-																		 "     | ing        |            |                   |\r\n"
-																		 "-----------------------------------------------------------\r\n"
-																		 "   2 | task numbe | ", todayString, " |         -         | tag3\r\n"
-																		 "     | r 4        |            |                   |\r\n"
-																		 "-----------------------------------------------------------\r\n"
-																		 "\r\n");	
+			if(it == 1)
+			  targetOutput = Concatenate(11, "\r\n"
+			  															 "  ID | Task       | Date Added | Date Due          | Tags\r\n"
+			  															 "===========================================================\r\n" 
+			  															 "   3 | task x     | ", todayString, " | ", dateDueString2, "  | tag 2\r\n"
+			  															 "-----------------------------------------------------------\r\n"
+			  															 "   1 | modded str | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
+			  															 "     | ing        |            |                   |\r\n"
+			  															 "-----------------------------------------------------------\r\n"
+			  															 "   2 | task numbe | ", todayString, " |         -         | tag3\r\n"
+			  															 "     | r 4        |            |                   |\r\n"
+			  															 "-----------------------------------------------------------\r\n"
+			  															 "\r\n");	
+			else
+				targetOutput = Concatenate(9, "\r\n"
+			  															"  ID | Task          | Date Added | Date Due          | Tags\r\n"
+			  															"==============================================================\r\n" 
+			  															"   1 | modded string | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
+			  															"--------------------------------------------------------------\r\n"
+			  															"   3 | task x        | ", todayString, " | ", dateDueString2, "  | tag 2\r\n"
+			  															"--------------------------------------------------------------\r\n"
+			  															"\r\n");	
 		}
 		// Format output and run custom comparison
 		{
