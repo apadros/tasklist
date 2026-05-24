@@ -60,7 +60,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 	#ifdef APAD_DEBUG_COMMANDS
 		#if 0
-		char* debugArgs[] = { args[0], "list", "all"};
+		char* debugArgs[] = { args[0], "list", "all", "-maxwidth", "10"};
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
 		#endif
@@ -91,6 +91,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	const char* 	   tags[MaxTags] = { Null };
 	const char* 	   specialOption = Null;
 	bool 						 printHorizontal = false;
+	ui8              maxHorizontalTaskColumnWidth = UI8Max; // Default
 	bool             sortByDateDue = false;
 
 	// Parse and check command
@@ -200,12 +201,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 				specialOption = arg;
 				continue;
 			}	
-			else if(StringsAreEqual(arg, "printhor") == true) {
+			else if(StringsAreEqual(arg, "-printhor") == true) {
 				printHorizontal = true;
 				continue;
 			}
-			else if(StringsAreEqual(arg, "sortbydd") == true) {
+			else if(StringsAreEqual(arg, "-sortbydd") == true) {
 				sortByDateDue = true;
+				continue;
+			}
+			else if(StringsAreEqual(arg, "-maxwidth") == true) {
+				it += 1;
+				CheckArgsExit();
+				char* number = (char*)args[it];
+				if(IsNumber((char*)number) == false || StringToInt(number, Null) > UI8Max)
+					PrintErrorExit("Invalid max task column width specified");
+				maxHorizontalTaskColumnWidth = StringToInt(number, Null);
 				continue;
 			}
 		}
@@ -366,12 +376,13 @@ ConsoleAppEntryPoint(args, argsCount) {
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::List]) == true && argsCount < 4 && specialOption == Null) {
-		printf("\nUsage: %s %s [<options>] [printhor] [sortbydd]\n", args[0], command);
+		printf("\nUsage: %s %s [<options>] [-printhor] [-sortbydd] [-maxwidth <number<=256>]\n", args[0], command);
 		DisplayCommandOptions(true, true, true, true, true);
 		printf("    all                                                      list all todos\n");
 		printf("    alltags                                                  list all existing tags\n");
-		printf("  printhor                                                   print the results horizontally\n");
-		printf("  sortbydd                                                   sort by ascending date due\n");
+		printf(" -printhor                                                   print the results horizontally\n");
+		printf(" -sortbydd                                                   sort by ascending date due\n");
+		printf(" -maxwidth                                                   sort by ascending date due\n");
 		goto program_exit;
 	}
 	else if(StringsAreEqual(command, ValidCommands[ValidCommandsIndex::Modify]) == true && (id == Null || argsCount < 6)) {
@@ -467,7 +478,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		CopyMemory(tags, sizeof(tags), entry->tags);
 		PrintLogMessage("Task added");
-		PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
+		PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags, maxHorizontalTaskColumnWidth);
 
 		SaveTodosFile(todoList, dataPath);
 
@@ -606,8 +617,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 					if(length > taskColumnLength)
 						taskColumnLength = length;
 				}
-				if(taskColumnLength > MaxTaskPrintLength)
-					taskColumnLength = MaxTaskPrintLength;
+				if(taskColumnLength > maxHorizontalTaskColumnWidth)
+					taskColumnLength = maxHorizontalTaskColumnWidth;
 
 				// Print header for horizontal print
 				if(printHorizontal == true) {
@@ -645,20 +656,20 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 						// Print task string
 						char* remainingTaskToPrint = Null;
-						if(GetStringLength(entry->task) <= MaxTaskPrintLength) { // Just print the string and pad the end
+						if(GetStringLength(entry->task) <= maxHorizontalTaskColumnWidth) { // Just print the string and pad the end
 							printf(" %s ", entry->task);
 							auto length = GetStringLength(entry->task);
 							auto diff = Magnitude(length - taskColumnLength);
 							ForAll(diff)
 								printf(" ");
 						}
-						else { // Print up to MaxTaskPrintLength, then truncate
+						else { // Print up to maxHorizontalTaskColumnWidth, then truncate
 							remainingTaskToPrint = AllocateString(entry->task, Null);
-							char c = remainingTaskToPrint[MaxTaskPrintLength];
-							remainingTaskToPrint[MaxTaskPrintLength] = '\0';
+							char c = remainingTaskToPrint[maxHorizontalTaskColumnWidth];
+							remainingTaskToPrint[maxHorizontalTaskColumnWidth] = '\0';
 							printf(" %s ", remainingTaskToPrint);
-							remainingTaskToPrint[MaxTaskPrintLength] = c;
-							remainingTaskToPrint += MaxTaskPrintLength;
+							remainingTaskToPrint[maxHorizontalTaskColumnWidth] = c;
+							remainingTaskToPrint += maxHorizontalTaskColumnWidth;
 						}
 
 						printf("| %s |", entry->dateAdded);
@@ -705,7 +716,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 							printf("     "); // ID column
 							
 							// Task string
-							if(GetStringLength(remainingTaskToPrint) <= MaxTaskPrintLength) { // Just print the string and pad the end
+							if(GetStringLength(remainingTaskToPrint) <= maxHorizontalTaskColumnWidth) { // Just print the string and pad the end
 								printf("| %s ", remainingTaskToPrint);
 								auto length = GetStringLength(remainingTaskToPrint);
 								auto diff = Magnitude(length - taskColumnLength);
@@ -713,12 +724,12 @@ ConsoleAppEntryPoint(args, argsCount) {
 									printf(" ");
 								remainingTaskToPrint = Null;
 							}
-							else { // Print up to MaxTaskPrintLength, then truncate again
-								char c = remainingTaskToPrint[MaxTaskPrintLength];
-								remainingTaskToPrint[MaxTaskPrintLength] = '\0';
+							else { // Print up to maxHorizontalTaskColumnWidth, then truncate again
+								char c = remainingTaskToPrint[maxHorizontalTaskColumnWidth];
+								remainingTaskToPrint[maxHorizontalTaskColumnWidth] = '\0';
 								printf("| %s ", remainingTaskToPrint);
-								remainingTaskToPrint[MaxTaskPrintLength] = c;
-								remainingTaskToPrint += MaxTaskPrintLength;
+								remainingTaskToPrint[maxHorizontalTaskColumnWidth] = c;
+								remainingTaskToPrint += maxHorizontalTaskColumnWidth;
 							}
 							
 							// Date added, date due and tags
@@ -732,7 +743,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 						printf("-----------------------------------------\n");
 					}
 					else
-						PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags);
+						PrintTaskVertical(entry->ID, entry->task, entry->dateAdded, entry->dateDue, (char**)entry->tags, maxHorizontalTaskColumnWidth);
 				}
 			}
 			FreeStack(entriesToPrint);
@@ -806,7 +817,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 
 			PrintLogMessage(outputString);
 
-			PrintTaskVertical(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags);
+			PrintTaskVertical(moddedEntry->ID, moddedEntry->task, moddedEntry->dateAdded, moddedEntry->dateDue, (char**)moddedEntry->tags, maxHorizontalTaskColumnWidth);
 			SaveTodosFile(todoList, dataPath);
 			UpdateLogFile(Concatenate(2, "- ", outputString), logFile, logFilePath);
 		}

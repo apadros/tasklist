@@ -217,7 +217,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			CarryOutCommands(commands, 1);
 			
 			system("del temp.txt"); // Test only the listing outputs
-			commands[0] = "todos list all printhor sortbydd";
+			commands[0] = "todos list all -printhor -sortbydd";
 			CarryOutCommands(commands, 1);
 		}
 		const char* targetOutput = Null;

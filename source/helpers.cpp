@@ -166,10 +166,11 @@ si32 GetDaysOffsetFromToday(const char* targetDate) {
 }
 
 #include "apad_string.h"
-void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags) {
+void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags, ui8 maxTaskColumWidth) {
 	Assert(task != Null);
 	Assert(dateAdded != Null);
 	Assert(tags != Null);
+	Assert(maxTaskColumWidth > 0);
 	
 	printf("\n");
 	printf("  ID:         %u\n", id);
@@ -178,7 +179,7 @@ void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char
 	auto length = GetStringLength(task);
 	ForAll(length) {
 		printf("%c", task[it]);
-		if(it > 0 && it % MaxTaskPrintLength == 0)
+		if(it > 0 && it % maxTaskColumWidth == 0)
 			printf("\n              ");
 		else if(it == length - 1)
 			printf("\n");

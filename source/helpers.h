@@ -15,8 +15,6 @@ struct todoListEntry {
 	char* tags[MaxTags]; // Can all be Null
 };
 
-const ui8 MaxTaskPrintLength = 50;
-
 #include <stdio.h>
 #define PrintError(_string) \
 	printf("\nERROR: %s\n", _string)
@@ -45,7 +43,7 @@ bool IsValidChar(char c);
 bool AnyTagsPresent(char** tags);
 bool TagIsValid(const char* tag);
 
-void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags);
+void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char** tags, ui8 maxTaskColumWidth);
 
 void DisplayCommandOptions(bool id, bool taskString, bool dateAdded, bool dateDue, bool tags);
 void PrintLogMessage(const char* string);
