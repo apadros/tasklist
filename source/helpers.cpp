@@ -2,8 +2,6 @@
 #include "apad_error.h"
 #include "helpers.h"
 
-program_external const ui8 MaxTaskPrintLength = 50;
-
 #include <time.h>
 #include "apad_time.h"
 program_local tm ConvertDateToCSLTime(date& d) {
@@ -188,14 +186,8 @@ void PrintTaskVertical(ui16 id, char* task, char* dateAdded, char* dateDue, char
 	
 	printf("  Date added: %s\n", dateAdded);
 	printf("  Date due:   %s", dateDue == Null ? "-\n" : dateDue);
-	if(dateDue != Null) {
-		si32 diffDays = GetDaysOffsetFromToday(dateDue);
-		
-		 if(diffDays > 0)
-		   printf(" (+%i)\n", diffDays);
-		 else
-		   printf(" (%i)\n", diffDays);
-	}
+	if(dateDue != Null)
+		printf(" (%+i)\n", GetDaysOffsetFromToday(dateDue));
 	printf("  Tags:       ");
 
 	if(AnyTagsPresent(tags) == true) {

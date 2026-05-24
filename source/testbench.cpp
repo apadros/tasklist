@@ -266,7 +266,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 																		 "--------------------------------------------------------------\r\n"
 																		 "\r\n");	
 		}
-		// Run custom comparison
+		// Format output and run custom comparison
 		{
 			auto tempFile = LoadFile("temp.txt");
 			const char* tempContents = (const char*)tempFile.memory;

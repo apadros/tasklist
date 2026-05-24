@@ -59,7 +59,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 	RegisterExitFunction(ExitFunction);
 
 	#ifdef APAD_DEBUG_COMMANDS
-		#if 1
+		#if 0
 		char* debugArgs[] = { args[0], "list", "all"};
 		args = debugArgs;
 		argsCount = GetArrayLength(debugArgs);
@@ -606,6 +606,8 @@ ConsoleAppEntryPoint(args, argsCount) {
 					if(length > taskColumnLength)
 						taskColumnLength = length;
 				}
+				if(taskColumnLength > MaxTaskPrintLength)
+					taskColumnLength = MaxTaskPrintLength;
 
 				// Print header for horizontal print
 				if(printHorizontal == true) {
@@ -642,17 +644,21 @@ ConsoleAppEntryPoint(args, argsCount) {
 						printf("|");
 
 						// Print task string
-						char* taskToPrint = AllocateString(entry->task, Null);
-						if(GetStringLength(entry->task) > MaxTaskPrintLength) {
-							remainingString = AllocateString(entry->task, MaxTaskPrintLength);
-							
-						}
-						else {
+						char* remainingTaskToPrint = Null;
+						if(GetStringLength(entry->task) <= MaxTaskPrintLength) { // Just print the string and pad the end
 							printf(" %s ", entry->task);
 							auto length = GetStringLength(entry->task);
 							auto diff = Magnitude(length - taskColumnLength);
 							ForAll(diff)
 								printf(" ");
+						}
+						else { // Print up to MaxTaskPrintLength, then truncate
+							remainingTaskToPrint = AllocateString(entry->task, Null);
+							char c = remainingTaskToPrint[MaxTaskPrintLength];
+							remainingTaskToPrint[MaxTaskPrintLength] = '\0';
+							printf(" %s ", remainingTaskToPrint);
+							remainingTaskToPrint[MaxTaskPrintLength] = c;
+							remainingTaskToPrint += MaxTaskPrintLength;
 						}
 
 						printf("| %s |", entry->dateAdded);
@@ -693,6 +699,31 @@ ConsoleAppEntryPoint(args, argsCount) {
 						else
 							printf(" - ");
 						printf("\n");
+						
+						// Keep printing the entry task string if any remains
+						while (remainingTaskToPrint != Null) {
+							printf("     "); // ID column
+							
+							// Task string
+							if(GetStringLength(remainingTaskToPrint) <= MaxTaskPrintLength) { // Just print the string and pad the end
+								printf("| %s ", remainingTaskToPrint);
+								auto length = GetStringLength(remainingTaskToPrint);
+								auto diff = Magnitude(length - taskColumnLength);
+								ForAll(diff)
+									printf(" ");
+								remainingTaskToPrint = Null;
+							}
+							else { // Print up to MaxTaskPrintLength, then truncate again
+								char c = remainingTaskToPrint[MaxTaskPrintLength];
+								remainingTaskToPrint[MaxTaskPrintLength] = '\0';
+								printf("| %s ", remainingTaskToPrint);
+								remainingTaskToPrint[MaxTaskPrintLength] = c;
+								remainingTaskToPrint += MaxTaskPrintLength;
+							}
+							
+							// Date added, date due and tags
+							printf("|            |                   |\n");
+						}
 
 						// Print horizontal separator
 						printf("------------");
