@@ -217,7 +217,7 @@ ConsoleAppEntryPoint(args, argsCount) {
 			CarryOutCommands(commands, 1);
 			
 			system("del temp.txt"); // Test only the listing outputs
-			commands[0] = "todos list all -printhor -sortbydd";
+			commands[0] = "todos list all -printhor -sortbydd -maxwidth 10";
 			CarryOutCommands(commands, 1);
 		}
 		const char* targetOutput = Null;
@@ -256,14 +256,16 @@ ConsoleAppEntryPoint(args, argsCount) {
 				dateDueString2 = Concatenate(2, dateDueString2, "  ");
 			
 			targetOutput = Concatenate(11, "\r\n"
-																		 "  ID | Task          | Date Added | Date Due          | Tags\r\n"
-																		 "==============================================================\r\n" 
-																		 "   3 | task x        | ", todayString, " | ", dateDueString2, "  | tag 4\r\n"
-																		 "--------------------------------------------------------------\r\n"
-																		 "   1 | modded string | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
-																		 "--------------------------------------------------------------\r\n"
-																		 "   2 | task number 4 | ", todayString, " |         -         | tag3\r\n"
-																		 "--------------------------------------------------------------\r\n"
+																		 "  ID | Task       | Date Added | Date Due          | Tags\r\n"
+																		 "===========================================================\r\n" 
+																		 "   3 | task x     | ", todayString, " | ", dateDueString2, "  | tag 4\r\n"
+																		 "-----------------------------------------------------------\r\n"
+																		 "   1 | modded str | ", todayString, " | ", dateDueString1, " | tag 2, new tag\r\n"
+																		 "     | ing        |            |                   |\r\n"
+																		 "-----------------------------------------------------------\r\n"
+																		 "   2 | task numbe | ", todayString, " |         -         | tag3\r\n"
+																		 "     | r 4        |            |                   |\r\n"
+																		 "-----------------------------------------------------------\r\n"
 																		 "\r\n");	
 		}
 		// Format output and run custom comparison
