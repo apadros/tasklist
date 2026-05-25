@@ -1,2 +1,5 @@
+v1.0.1
+	- Minor bug and log formatting fixes
+
 v1.0.0
 	- All base target functionality included

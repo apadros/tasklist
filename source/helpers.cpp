@@ -24,6 +24,7 @@ bool TagIsValid(const char* tag) {
 
 #include "apad_string.h"
 bool DateDueIsUnspecified(const char* dateDue) {
+	Assert(dateDue != Null);
 	return GetStringLength(dateDue) == 1 && dateDue[0] == '-';
 }
 

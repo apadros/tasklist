@@ -433,12 +433,13 @@ ConsoleAppEntryPoint(args, argsCount) {
 		}
 		char* todayStringHeader = Concatenate(3, "# ", DateToString(GetDate(0)), " #");
 		if(FindSubstring(todayStringHeader, (const char*)logFile.memory) == Null) {
-			PushString("\n", false, logFile);
+			PushString("\n\n", false, logFile);
 			PushString(todayStringHeader, false, logFile);
-			PushString("\n", false, logFile);
 		}
 		if(lastChar != Null)
 			*lastChar = lastCharCopy;
+		
+		PushString("\n", false, logFile);
 		
 		// Add time
 		const char* string = Concatenate(2, GetTimeNow(), " ");
@@ -768,13 +769,15 @@ ConsoleAppEntryPoint(args, argsCount) {
 					modsCount += 1;
 				}
 				
-				if(DateDueIsUnspecified(dateDue) == true) {
-					entry->dateDue = Null;
-					modsCount += 1;
-				}
-				else if(dateDue != Null) {
-					entry->dateDue = (char*)dateDue;
-					modsCount += 1;
+				if(dateDue != Null) {
+					if(DateDueIsUnspecified(dateDue) == true) {
+						entry->dateDue = Null;
+						modsCount += 1;
+					}
+					else{
+						entry->dateDue = (char*)dateDue;
+						modsCount += 1;
+					}
 				}
 
 				if(AnyTagsPresent((char**)tags) == true) {
